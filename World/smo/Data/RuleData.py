@@ -6,6 +6,7 @@ from rule_builder.rules import *
 from .EntranceData import SMOEntranceData
 from .ItemData import SMOItemData as items
 from .LocationData import SMOLocationData as loc
+from ..Options import SMOOptions as opts, TrickJumpLogic
 from .RegionData import SMORegion
 
 
@@ -124,221 +125,182 @@ moon_rule_data : dict[str, Rule] = {
     loc.frog_jumping_above_the_fog: CanCapture(items.frog),
     loc.frog_jumping_from_the_top_deck: CanCapture(items.frog),
     loc.cap_kingdom_timer_challenge_1: HasAny(*cappy),
-    loc.shopping_in_bonneton: True_(),
+    loc.shopping_in_bonneton: True_(), # Doesn't even need Jump
     loc.the_forgotten_treasure: Has(items.ground_pound),
     loc.taxi_flying_through_bonneton: CanCapture(items.binoculars),
     loc.bonnetter_blockade: CanCapture(items.paragoomba),
-    loc.peach_in_the_cap_kingdom: And(CanReachRegion(SMOKingdoms.MUSHROOM), Has(items.jump)),
-    loc.found_with_cap_kingdom_art: And(CanReachRegion(SMOKingdoms.MOON), Has(items.ground_pound)),
+    loc.peach_in_the_cap_kingdom: CanReachRegion(SMORegion.mushroom_kingdom),
+    loc.found_with_cap_kingdom_art: And(CanReachRegion(SMORegion.moon_kingdom), Has(items.ground_pound)),
     #endregion
 
     #region Cap Moons Top of Top Hat Tower
-    loc.good_evening_captain_toad: [],
-    loc.cap_kingdom_regular_cup: [
-        (SMORuleCondition.ABILITY, [items.jump], SMORuleOperation.NONE),
-    ],
+    loc.good_evening_captain_toad: True_(), # Doesn't even need Jump
+    loc.cap_kingdom_regular_cup: True_(),
     #endregion
 
     #region Cap Moons Moon Rock
-    loc.next_to_glasses_bridge: [
-        (SMORuleCondition.ABILITY, [items.jump], SMORuleOperation.NONE),
-    ],
-    loc.danger_sign: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.NONE),
-    ],
-    loc.under_the_big_ones_brim: [
-        (SMORuleCondition.ABILITY, [items.jump], SMORuleOperation.NONE),
-    ],
-    loc.fly_to_the_edge_of_the_fog: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [SMORuleCondition.ABILITY], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.dive], SMORuleOperation.PARENTHESIS_NONE)
-    ],
-    loc.spin_the_hat_get_a_prize: [],
-    loc.hidden_in_a_sunken_hat: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.PARENTHESIS_OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [SMORuleCondition.ABILITY], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.vault], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.dive], SMORuleOperation.PARENTHESIS_OR),
-    ],
-    loc.fog_shrouded_platform: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE),
-    ],
-    loc.bird_traveling_in_the_fog: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, None, SMORuleOperation.NONE),
-    ],
-    loc.caught_hopping_near_the_ship: [],
-    loc.taking_notes_in_the_fog: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.NONE),
-    ],
-    loc.cap_kingdom_timer_challenge_2: [],
+    loc.next_to_glasses_bridge: True_(),
+    loc.danger_sign: CanCapture(items.paragoomba),
+    loc.under_the_big_ones_brim: True_(),
+    loc.fly_to_the_edge_of_the_fog: (
+        Or(
+            CanCapture(items.paragoomba),
+            Has(items.dive, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")])
+        )
+    ),
+    loc.spin_the_hat_get_a_prize: HasAny(*cappy),
+    loc.hidden_in_a_sunken_hat: Or(
+            CanCapture(items.paragoomba),
+            HasAll(items.dive, items.vault,
+                options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]
+            )
+    ),
+    loc.fog_shrouded_platform: Has(items.ground_pound),
+    loc.bird_traveling_in_the_fog: Or(
+            CanCapture(items.paragoomba),
+            True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")])
+    ),
+    loc.caught_hopping_near_the_ship: HasAny(*cappy),
+    loc.taking_notes_in_the_fog: CanCapture(items.paragoomba),
+    loc.cap_kingdom_timer_challenge_2: HasAny(*cappy),
     #endregion
 
     #region Cap Moons Top of Top Hat Tower Moon Rock
-    loc.cap_kingdom_master_cup: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [SMORuleCondition.ABILITY], SMORuleOperation.AND),
-        (SMORuleCondition.ABILITY, [items.long_jump], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [SMORuleCondition.ABILITY], SMORuleOperation.AND),
-        (SMORuleCondition.ABILITY, [items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [SMORuleCondition.ABILITY], SMORuleOperation.AND),
-        (SMORuleCondition.ABILITY, [items.roll], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [SMORuleCondition.ABILITY], SMORuleOperation.AND),
-        (SMORuleCondition.ABILITY, [items.triple_jump], SMORuleOperation.NONE),
-    ],
+    loc.cap_kingdom_master_cup: Or(
+        CanCapture(items.paragoomba),
+        HasAny(items.dive, items.roll,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]
+        ),
+        Has(items.triple_jump,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]
+        )
+    ),
     #endregion
 
     #region Cap Moons Poson Tide
-    loc.skimming_the_poison_tide: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.NONE),
-    ],
-    loc.slipping_through_the_poison_tide: [
-        (SMORuleCondition.CAPTURE, [items.paragoomba], SMORuleOperation.NONE),
-    ],
+    loc.skimming_the_poison_tide: CanCapture(items.paragoomba),
+    loc.slipping_through_the_poison_tide: CanCapture(items.paragoomba),
     #endregion
 
     #region Cap Moons Push Block
-    loc.push_block_peril: [
-        (SMORuleCondition.ABILITY,
-        [items.spark_pylon, items.double_jump],
-        [items.spark_pylon, items.vault],
-        [items.spark_pylon, items.wall_jump],
-        [items.spark_pylon, items.dive],
-        [items.spark_pylon, items.side_flip], SMORuleOperation.NONE),
-        (SMORuleCondition.TRICK_EASY,
-        [items.spark_pylon, items.ledge_grab], SMORuleOperation.NONE),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.spark_pylon], SMORuleOperation.OR),
-
-    ],
-    loc.hidden_among_the_push_blocks: [
-        (SMORuleCondition.ABILITY,
-        [items.spark_pylon, items.double_jump],
-        [items.spark_pylon, items.vault],
-        [items.spark_pylon, items.wall_jump],
-        [items.spark_pylon, items.dive],
-        [items.spark_pylon, items.side_flip], SMORuleOperation.NONE),
-        (SMORuleCondition.TRICK_EASY,
-        [items.spark_pylon, items.ledge_grab], SMORuleOperation.NONE),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.spark_pylon], SMORuleOperation.OR),
-    ],
+    loc.push_block_peril: And(
+        CanCapture(items.spark_pylon),
+        Or(
+            True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]),
+            HasAny(items.double_jump, items.triple_jump, items.vault, items.dive, items.spin_jump, items.ground_pound_jump)
+        )
+    ),
+    loc.hidden_among_the_push_blocks: And(
+        CanCapture(items.spark_pylon),
+        Or(
+            True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]),
+            HasAny(items.double_jump, items.triple_jump, items.vault, items.dive, items.spin_jump, items.ground_pound_jump)
+        )
+    ),
     #endregion
 
     #region Cap Moons Frog Pond
-    loc.searching_the_frog_pond: [
-        (SMORuleCondition.CAPTURE, [items.frog], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY,
-        [items.dive, items.backflip, items.vault],
-        [items.ground_pound_jump, items.vault, items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE,
-        [items.backflip, items.dive],
-        [items.ground_pound_jump, items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_HARD, [items.vault], SMORuleOperation.NONE),
-        ],
+    loc.searching_the_frog_pond: Or(
+        CanCapture(items.frog),
+        And(HasAll(items.vault, items.dive), HasAny(items.back_flip, items.ground_pound_jump),
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]),
+        And(Has(items.dive), HasAny(items.back_flip, items.ground_pound_jump),
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]),
+        Has(items.vault, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)])
+    ),
 
-    loc.secrets_of_the_frog_pond: [
-        (SMORuleCondition.CAPTURE, [items.frog], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY,
-         [items.vault, items.dive, items.wall_jump], SMORuleOperation.NONE)
-    ],
+    loc.secrets_of_the_frog_pond: Or(
+        CanCapture(items.frog),
+        HasAll(items.vault, items.dive, items.wall_jump,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")])
+    ),
     #endregion
 
     #region Cap Moons Rolling Lane
-    loc.roll_on_and_on: [],
-    loc.precision_rolling: [],
+    loc.roll_on_and_on: True_(),
+    loc.precision_rolling: True_(), # Doesn't even need Jump
     #endregion
 
     #region Cascade Moons
-    loc.our_first_power_moon: [
-    (SMORuleCondition.CAPTURE, [items.chain_chomp], SMORuleOperation.NONE)
-    ],
-    loc.chomp_through_the_rocks: [
-        (SMORuleCondition.CAPTURE, [items.t_rex], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.chain_chomp], SMORuleOperation.NONE)
-
-    ],
-    loc.behind_the_waterfall: [
-        (SMORuleCondition.CAPTURE, [items.t_rex], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.big_chain_chomp], SMORuleOperation.NONE),
-    ],
-    loc.multi_moon_atop_the_falls: [
-        (SMORuleCondition.CAPTURE, [items.broodes_chain_chomp, items.t_rex], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.broodes_chain_chomp, items.big_chain_chomp], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.broodes_chain_chomp, items.backflip, items.dive, items.wall_jump, items.vault], SMORuleOperation.NONE),
-    ],
+    loc.our_first_power_moon: CanCapture(items.chain_chomp),
+    loc.chomp_through_the_rocks: Or(
+        CanCapture(items.chain_chomp),
+        CanCapture(items.t_rex),
+    ),
+    loc.behind_the_waterfall: Or(
+        CanCapture(items.chain_chomp),
+        CanCapture(items.t_rex),
+    ),
+    loc.multi_moon_atop_the_falls: And(
+        CanCapture(item.broodes_chain_chomp),
+        Or(
+            CanCapture(items.chain_chomp),
+            CanCapture(items.t_rex),
+            HasAll(items.back_flip, items.dive, items.wall_jump, items.vault,
+                options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")])
+        )
+    ),
     #endregion
 
     #region Cascade Moons Post Peace Moons
-    loc.treasure_of_the_waterfall_basin: [],
-    loc.on_top_of_the_rubble: [],
-    loc.cascade_kingdom_timer_challenge_1: [],
-    loc.cascade_kingdom_regular_cup:[
-        (SMORuleCondition.ABILITY, [items.roll_boost], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [items.long_jump], [items.triple_jump], [items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.spin], [items.triple_jump], [items.vault], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_HARD, [], SMORuleOperation.NONE),
-    ],
-    loc.shopping_in_fossil_falls:[],
-    loc.sphynx_traveling_to_the_waterfall: [
-        (SMORuleCondition.CAPTURE, [items.binoculars], SMORuleOperation.NONE),
-    ],
-    loc.above_a_high_cliff: [],
-    loc.across_the_floating_isles: [],
-    loc.cascade_kingdom_timer_challenge_2: [
-        (SMORuleCondition.ABILITY, [items.triple_jump], [items.backflip], [items.side_flip],
-        [items.ground_pound_jump],[items.spin],[items.double_jump, items.dive], [items.wall_jump, items.dive], SMORuleOperation.NONE),
-    ],
-    loc.good_morning_captain_toad:[],
-    loc.caveman_cave_fan:[
-        (SMORuleCondition.ITEM, [items.caveman_headwear, items.caveman_outfit], SMORuleOperation.NONE)
-    ],
-    loc.peach_in_the_cascade_kingdom: [
-        (SMORuleCondition.REGION, SMORegion.mushroom_kingdom, SMORuleOperation.NONE)
-    ],
-    loc.secret_path_to_fossil_falls: [
-        (SMORuleCondition.REGION, SMORegion.seaside_kingdom_peace, SMORuleOperation.AND),
-        (SMORuleCondition.REGION, SMORegion.snow_kingdom_peace, SMORuleOperation.NONE),
-    ],
-    loc.a_tourist_in_the_cascade_kingdom: [
-        (SMORuleCondition.REGION, SMORegion.sand_kingdom_peace, SMORuleOperation.AND),
-        (SMORuleCondition.REGION, SMORegion.metro_kingdom_peace, SMORuleOperation.NONE)
-    ],
+    loc.treasure_of_the_waterfall_basin: HasAny(*cappy),
+    loc.on_top_of_the_rubble: True_(),
+    loc.cascade_kingdom_timer_challenge_1: HasAny(*cappy),
+    loc.cascade_kingdom_regular_cup: Or(
+        Has(item.roll_boost),
+        HasAny(item.long_jump, item.triple_jump, items.dive,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]),
+        HasAny(item.spin, item.triple_jump, items.vault,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]),
+        True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)])
+    ),
+    loc.shopping_in_fossil_falls: True_(),
+    loc.sphynx_traveling_to_the_waterfall: CanCapture(items.binoculars),
+    loc.above_a_high_cliff: True_(),
+    loc.across_the_floating_isles: True_(),
+    loc.cascade_kingdom_timer_challenge_2: Or(
+        HasAny(items.triple_jump, items.back_flip, items.side_flip, items.ground_pound_jump, items.spin),
+        And(
+            Has(items.dive),
+            HasAny(items.double_jump, items.wall_jump)
+        )
+    ),
+    loc.good_morning_captain_toad: True_(),
+    loc.caveman_cave_fan: HasAll(items.caveman_headwear, items.caveman_outfit),
+    loc.peach_in_the_cascade_kingdom: CanReachRegion(SMORegion.mushroom_kingdom),
+    loc.secret_path_to_fossil_falls: And(
+        CanReachRegion(SMORegion.seaside_kingdom_peace),
+        CanReachRegion(SMORegion.snow_kingdom_peace)
+    ),
+    loc.a_tourist_in_the_cascade_kingdom: And(
+        CanReachRegion(SMORegion.sand_kingdom_peace),
+        CanReachRegion(SMORegion.metro_kingdom_peace)
+    ),
     #endregion
 
     #region Cascade Moons Moon Revisit Moons
-    loc.rolling_rock_by_the_falls: [],
+    loc.rolling_rock_by_the_falls: True_(),
     #endregion
 
     #region Cascade Moons Moon Rock Moons
-    loc.taking_notes_hurry_upward: [],
-    loc.bottom_of_the_waterfall_basin: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.under_the_old_electrical_pole: [
-        (SMORuleCondition.CAPTURE, [items.t_rex], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.PARENTHESIS_NONE)
-    ],
-    loc.caught_hopping_at_the_waterfall: [],
-    loc.cascade_kingdom_master_cup: [
-        (SMORuleCondition.ABILITY, [items.long_jump], [items.triple_jump], [items.dive], [items.roll_boost], SMORuleOperation.NONE)
-    ],
-    loc.next_to_the_stone_arch: [],
-    loc.guarded_by_a_colossal_fossil: [],
-    loc.inside_the_busted_fossil:[
-
-    ],
-    loc.treasure_under_the_cliff: [],
-    loc.under_the_ground: [
-        (SMORuleCondition.CAPTURE, [items.t_rex], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.PARENTHESIS_NONE)
-    ],
+    loc.taking_notes_hurry_upward: True_(),
+    loc.bottom_of_the_waterfall_basin: Has(items.ground_pound),
+    loc.under_the_old_electrical_pole: And(
+        CanCapture(items.t_rex),
+        Has(items.ground_pound)
+    ),
+    loc.caught_hopping_at_the_waterfall: HasAny(*cappy),
+    loc.cascade_kingdom_master_cup: HasAny(items.long_jump, items.triple_jump, items.dive, items.roll_boost),
+    loc.next_to_the_stone_arch: True_(),
+    loc.guarded_by_a_colossal_fossil: HasAny(*cappy),
+    loc.inside_the_busted_fossil: CanCapture(items.chain_chomp),
+    loc.treasure_under_the_cliff: HasAny(*cappy),
+    loc.under_the_ground: And(CanCapture(items.t_rex), Has(items.ground_pound)),
     #endregion
 
     #region Cascade Kingdom T-Rex Nest Moons
-    loc.dinosaur_nest_big_cleanup: [],
-    loc.dinosaur_nest_running_wild: [
-        (SMORuleCondition.CAPTURE, [items.t_rex], SMORuleOperation.NONE)
-    ],
+    loc.dinosaur_nest_big_cleanup: HasAny(*cappy),
+    loc.dinosaur_nest_running_wild: CanCapture(items.t_rex),
     #endregion
 
     #region Cascade Kingdom Chain Chomp Cave Moons
@@ -351,159 +313,163 @@ moon_rule_data : dict[str, Rule] = {
     #endregion
 
     #region Cascade Kingdom Chasm Lifts Moons
-    loc.past_the_chasm_lifts:[],
-    loc.hidden_chasm_passage:[],
+    loc.past_the_chasm_lifts: True_(),
+    loc.hidden_chasm_passage: True_(),
     #endregion
 
     #region Cascade Kingdom Gusty Bridges Moons
-    loc.across_the_gusty_bridges: [],
-    loc.flying_far_away_from_gusty_bridges: [],
+    loc.across_the_gusty_bridges: HasAny(*cappy),
+    loc.flying_far_away_from_gusty_bridges: HasAny(*cappy),
     #endregion
 
     #region Cascade Kingdom Mysterious Clouds Moons
-    loc.across_the_mysterious_clouds: [],
-    loc.atop_a_wall_among_the_clouds: [],
+    loc.across_the_mysterious_clouds: HasAny(*cappy),
+    loc.atop_a_wall_among_the_clouds: HasAny(*cappy),
     #endregion
 
     #region Sand Kingdom Moons
-    loc.atop_the_highest_tower: [],
-    loc.moon_shards_in_the_sand: [],
-    loc.overlooking_the_desert_town: [],
-    loc.alcove_in_the_ruins: [],
-    loc.on_the_leaning_pillar: [
-        (SMORuleCondition.CAPTURE, [items.bullet_bill], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [], SMORuleOperation.NONE),
-    ],
-    loc.hidden_room_in_the_flowing_sands: [],
-    loc.secret_of_the_mural: [],
-    loc.on_top_of_stone_archway: [
-        (SMORuleCondition.CAPTURE, [items.bullet_bill], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.spark_pylon], SMORuleOperation.NONE),
-    ],
-    loc.from_a_crate_in_the_ruins: [
-        (SMORuleCondition.CAPTURE, [items.bullet_bill], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [items.long_jump], [items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.vault], [items.triple_jump], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_HARD, [], SMORuleOperation.NONE)
-    ],
-    loc.where_the_birds_gather: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.top_of_a_dune: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.lost_in_the_luggage: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.inside_a_block_is_a_hard_place: [],
-    loc.the_treasure_of_jaxi_ruins: [],
-    loc.bird_traveling_the_desert: [],
-    loc.desert_gardening_plaza_seed: [],
-    loc.desert_gardening_ruins_seed: [],
-    loc.desert_gardening_seed_on_the_cliff: [],
-    loc.taking_notes_jump_on_the_palm: [
-        (SMORuleCondition.ABILITY, [items.climb], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_EASY, [], SMORuleOperation.NONE)
-    ],
-    loc.among_the_five_cactuses: [],
-    loc.wandering_cactus: [
-        SMORuleCondition.CAPTURE, [items.cactus], SMORuleOperation.NONE
-    ],
-    loc.found_with_bowsers_kingdom_art: [
-        (SMORuleCondition.REGION, [SMORegion.bowsers_kingdom], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.ground_pound],  SMORuleOperation.PARENTHESIS_NONE)
-    ],
+    loc.atop_the_highest_tower: True_(),
+    loc.moon_shards_in_the_sand: True_(),
+    loc.overlooking_the_desert_town: True_(),
+    loc.alcove_in_the_ruins: True_(),
+    loc.on_the_leaning_pillar: Or(
+        CanCapture(items.bullet_bill),
+        Has(items.dive, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy)]),
+        True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")])
+    ),
+    loc.hidden_room_in_the_flowing_sands: True_(),
+    loc.secret_of_the_mural: True_(),
+    loc.on_top_of_stone_archway: Or(
+        CanCapture(items.bullet_bill),
+        CanCapture(items.spark_pylon)
+    ),
+    loc.from_a_crate_in_the_ruins: Or(
+        CanCapture(items.bullet_bill),
+        HasAny(items.long_jump, items.dive, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]),
+        HasAny(items.vault, items.triple_jump, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate)]),
+        True_(options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)])
+    ),
+    loc.where_the_birds_gather: Has(items.ground_pound),
+    loc.top_of_a_dune: Has(items.ground_pound),
+    loc.lost_in_the_luggage: Has(items.ground_pound),
+    loc.inside_a_block_is_a_hard_place: True_(),
+    loc.the_treasure_of_jaxi_ruins: Or(
+        HasAny(*cappy)
+        #CanReachEntrance("placeholder")
+    ),
+    loc.bird_traveling_the_desert: HasAny(*cappy),
+    loc.desert_gardening_plaza_seed: True_(),
+    loc.desert_gardening_ruins_seed: True_(),
+    loc.desert_gardening_seed_on_the_cliff: True_(),
+    loc.taking_notes_jump_on_the_palm: Or(
+        Has(items.climb),
+        HasAny(*cappy, options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")])
+    ),
+    loc.on_the_lone_pillar: Or(
+        CanCapture(items.bullet_bill)
+        """ Needs Entrance Logic
+        And(
+            CanReachRegion(SMORegion.sand_kingdom_peace),
+            CanReachEntrance("placeholder")
+        )
+        """
+    ),
+    loc.among_the_five_cactuses: True_(), # Will eventually need Jaxi if that becomes randomized
+    loc.wandering_cactus: CanCapture(items.cactus),
+    loc.found_with_bowsers_kingdom_art: And(
+        CanReachRegion(SMORegion.bowser_kingdom),
+        Has(items.ground_pound)
+    ),
     #endregion
 
     #region Sand Kingdom Inverted Pyramid Mural
-    loc.secret_of_the_inverted_mural: [],
+    loc.secret_of_the_inverted_mural: True_(),
     #endregion
 
     #region Sand Kingdom Inverted Pyramid Upper
-    loc.hidden_room_in_the_inverted_pyramid: [
-        (SMORuleCondition.CAPTURE, [items.bullet_bill], SMORuleOperation.OR),
-        #needs to be tested with people
-    ],
+    loc.hidden_room_in_the_inverted_pyramid: CanCapture(items.bullet_bill),# needs to be tested with people
     #endregion
 
     #region Sand Kingdom Inverted Pyramid Top
-    loc.showdown_on_the_inverted_pyramid: [],
-    loc.on_the_statues_tail: [],
-    loc.on_the_lone_pillar: [],
-    #waiting for kgamer
+    loc.showdown_on_the_inverted_pyramid: HasAny(*cappy),
+    loc.on_the_statues_tail: HasAny(*cappy),
     #endregion
 
     #region Sand Kingdom Night Sand
-    loc.bullet_bill_breakthrough: [],
-    loc.secret_path_to_new_donk_city: [],
+    loc.bullet_bill_breakthrough: True_(),
+    loc.secret_path_to_new_donk_city: True_(),
     #endregion
 
     #region Sand Kingdom Underground Ruins
-    loc.underground_treasure_chest: [
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.dive], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.vault], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.backflip], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.ground_pound_jump], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.ledge_grab], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.spin], SMORuleOperation.OR),
-        (SMORuleCondition.CAPTURE, [items.bullet_bill, items.side_flip], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_HARD,  [items.ground_pound_jump, items.vault, items.dive, items.roll, items.up_throw, items.down_throw], SMORuleOperation.NONE)
-    ],
-    loc.goomba_tower_assembly: [
-        (SMORuleCondition.CAPTURE, [items.goomba], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_HARD, [items.ground_pound, items.vault, items.dive, items.roll], SMORuleOperation.NONE)
-    ],
+    loc.underground_treasure_chest: Or(
+        And(
+            CanCapture(items.bullet_bill),
+            HasAny(items.dive, items.vault, items.backflip, items.ground_pound_jump, items.ledge_grab, items.spin, items.side_flip)
+        ),
+        HasAll(items.ground_pound_jump, items.vault, items.dive, items.roll, items.up_throw, items.down_throw,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)]
+        )
+    ),
+    loc.goomba_tower_assembly: Or(
+        CanCapture(items.goomba),
+        HasAll(items.ground_pound, items.vault, items.dive, items.roll,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)]
+        )
+    ),
     #endregion
 
     #region Sand Kingdom Deepest Underground
-    loc.the_hole_in_the_desert: [
-        (SMORuleCondition.CAPTURE, [items.knucklotecs_fist, items.bullet_bill], SMORuleOperation.OR,),
-        (SMORuleCondition.TRICK_HARD, [items.ground_pound_jump, items.vault, items.dive, items.roll, items.up_throw, items.down_throw, items.knucklotecs_fist], SMORuleOperation.NONE)
-    ],
+    loc.the_hole_in_the_desert: And(
+        CanCapture(items.knucklotecs_fist),
+        Or(
+            CanCapture(items.bullet_bill),
+            HasAll(items.ground_pound_jump, items.vault, items.dive, items.roll, items.up_throw, items.down_throw,
+                options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_hard)]
+            )
+        )
+    ),
     #endregion
 
     #region Sand Kingdom Post Peace
-    loc.hang_your_hat_on_the_fountain: [],
-    loc.bird_traveling_wastes: [],
-    loc.sand_kingdom_timer_challenge_2: [],
-    loc.sand_kingdom_timer_challenge_1: [
-        (SMORuleCondition.CAPTURE, [items.spark_pylon], SMORuleOperation.PARENTHESIS_AND),
-        (SMORuleCondition.ABILITY, [items.roll, items.wall_jump], SMORuleOperation.PARENTHESIS_OR),
-        (SMORuleCondition.TRICK_EASY, [items.crouch, items.wall_jump, items.dive, items.vault], SMORuleOperation.OR),
-        (SMORuleCondition.TRICK_INTERMEDIATE, [items.wall_jump, items.dive, items.vault], SMORuleOperation.NONE)
-    ],
-    loc.sand_kingdom_timer_challenge_3: [],
-    loc.found_in_the_sand_good_dog: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.herding_sheep_in_the_dunes: [],
-    loc.fishing_in_the_oasis: [
-        (SMORuleCondition.CAPTURE, [items.lakitu], SMORuleOperation.NONE)
-    ],
-    loc.love_in_the_heart_of_the_desert: [
-        (SMORuleCondition.CAPTURE, [items.goomba], SMORuleOperation.NONE)
-    ],
-    loc.youre_quite_a_catch_captain_toad: [
-        (SMORuleCondition.CAPTURE, [items.lakitu], SMORuleOperation.NONE)
-    ],
-    loc.jaxi_reunion: [],
-    loc.walking_the_desert: [],
+    loc.hang_your_hat_on_the_fountain: HasAny(*cappy),
+    loc.bird_traveling_wastes: HasAny(*cappy),
+    loc.sand_kingdom_timer_challenge_2: HasAny(*cappy),
+    loc.sand_kingdom_timer_challenge_1: Or(
+        And(
+            CanCapture(items.spark_pylon),
+            HasAll(items.roll, items.wall_jump)
+        ),
+        HasAll(items.crouch, items.wall_jump, items.dive, items.vault,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")]
+        ),
+        HasAll(items.wall_jump, items.dive, items.vault,
+            options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_intermediate, operator="ge")]
+        )
+    )
+    loc.sand_kingdom_timer_challenge_3: HasAny(*cappy),
+    loc.found_in_the_sand_good_dog: Has(items.ground_pound),
+    loc.herding_sheep_in_the_dunes: True_(),
+    loc.fishing_in_the_oasis: CanCapture(items.lakitu),
+    loc.love_in_the_heart_of_the_desert: CanCapture(items.goomba),
+    loc.youre_quite_a_catch_captain_toad: CanCapture(items.lakitu),
+    loc.jaxi_reunion: True_(), # Will eventually need Jaxi if that becomes randomized
+    loc.walking_the_desert: True_() # Doesn't even need Jump,
     #endregion
 
     #region Sand Kingdom Top of Inverted Pyramid Post Peace
-    loc.the_lurker_under_the_stone: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
-    loc.welcome_back_jaxi: [],
+    loc.the_lurker_under_the_stone: And(
+        Has(items.ground_pound),
+        HasAny(*cappy)
+    ),
+    loc.welcome_back_jaxi: True_(), # Will eventually need Jaxi if that becomes randomized
     #endregion
 
     #region Sand Kingdom Sand Shop
-    loc.shopping_in_tostarena: [],
+    loc.shopping_in_tostarena: True_(), # Doesn't even need Jump
     #endregion
 
     #region Sand Kingdom Slots
-    loc.sand_kingdom_slots: [],
+    loc.sand_kingdom_slots: HasAny(*cappy),
     #endregion
 
     #region Sand Kingdom Moe Eye Sub Area
@@ -523,61 +489,57 @@ moon_rule_data : dict[str, Rule] = {
     #endregion
 
     #region Sand Kingdom Jaxi Ruins
-    loc.jaxi_driver: [],
-    loc.jaxi_stunt_driving: [],
+    loc.jaxi_driver: True_(), # Will eventually need Jaxi if that becomes randomized
+    loc.jaxi_stunt_driving: True_(), # Will eventually need Jaxi if that becomes randomized
     #endregion
 
     #region Sand Kingdom Strange Neighborhood
-    loc.strange_neighborhood: [],
-    loc.above_a_strange_neighborhood: [],
+    loc.strange_neighborhood: True_(),
+    loc.above_a_strange_neighborhood: True_(),
     #endregion
 
     #region Sand Kingdom Sand Rumble
-    loc.a_rumble_from_the_sandy_floor: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
+    loc.a_rumble_from_the_sandy_floor: Has(items.ground_pound),
     #endregion
 
     #region Sand Kingdom Employees Only
-    loc.employees_only: [],
+    loc.employees_only: True_(), # Doesn't even need Jump
     #endregion
 
     #region Sand Kingdom Ice Cave
-    loc.ice_cave_treasure: [
-        (SMORuleCondition.ABILITY, [items.wall_jump], SMORuleOperation.NONE)
-    ],
+    loc.ice_cave_treasure: Has(items.wall_jump),
     #endregion
 
     #region Sand Kingdom Sphynx Vault
-    loc.sphynxs_hidden_vault: [],
+    loc.sphynxs_hidden_vault: HasAny(*cappy),
     #endregion
 
     #region Sand Kingdom Deepest Underground Peace
-    loc.under_the_mummys_curse: [],
+    loc.under_the_mummys_curse: True_(),
     #endregion
 
     #region Sand Kingdom Deepest Underground Post Game
-    loc.binding_band_returned: [
-        (SMORuleCondition.ABILITY, [items.ground_pound], SMORuleOperation.NONE)
-    ],
+    loc.binding_band_returned: Has(items.ground_pound),
     #endregion
 
     #region Sand Kingdom Moe Eye Floor
-    loc.where_the_transparent_platforms_end: [],
-    loc.jump_onto_the_transparent_lift: [],
+    loc.where_the_transparent_platforms_end: True_(),
+    loc.jump_onto_the_transparent_lift: True_(),
     #endregion
 
     #region Sand Kingdom Colassal Ruins
-    loc.colossal_ruins_dash_jump: [
-        (SMORuleCondition.CAPTURE, [items.spark_pylon], SMORuleOperation.NONE)
-    ],
-    loc.sinking_colossal_ruins_hurry: [
-        (SMORuleCondition.CAPTURE, [items.spark_pylon], SMORuleOperation.NONE)
-    ],
+    loc.colossal_ruins_dash_jump: And(
+        CanCapture(items.spark_pylon),
+        HasAny(*cappy)
+    ),
+    loc.sinking_colossal_ruins_hurry: And(
+        CanCapture(items.spark_pylon),
+        HasAny(*cappy)
+    ),
     #endregion
 
     #region Sand Kingdom Sand Outfit
-    loc.dancing_with_new_friends: [],
+    loc.dancing_with_new_friends: True_(),
     #endregion
 
     #region Sand Kingdom Sand Kingdom Moon Rock

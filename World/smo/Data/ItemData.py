@@ -1,4 +1,3 @@
-
 class SMOItemData:
     # Moons
     cap_power_moon = 'Cap Power Moon'
@@ -257,21 +256,33 @@ class SMOItemData:
     jump = "Jump"
     double_jump = "Double Jump"
     triple_jump = "Triple Jump"
-    cap_throw = "Cap Throw"
-    crouch = "Crouch"
-    roll = "Roll"
-    dive = "Dive"
+    side_flip = "Side Flip"
+    back_flip = "Back Flip"
+    long_jump = "Long Jump"
     wall_jump = "Wall Jump"
+    spin = "Spin"
+    spin_jump = "Spin Jump"
     ground_pound = "Ground Pound"
     ground_pound_jump = "Ground Pound Jump"
-    spin_jump = "Spin Jump"
-    cappy_return_jump = "Cappy Return Jump"
-    cappy_bounce = "Cappy Bounce"
-    vault = "Vault"
-    rainbow_spin = "Rainbow Spin"
+    cap_throw = "Cap Throw" # (Neutral Throw)
+    up_throw = "Up Throw"
+    down_throw = "Down Throw"
     spin_throw = "Spin Throw"
+    crouch = "Crouch"
+    roll = "Roll"
+    roll_boost = "Roll Boost"
+    vault = "Vault"
+    dive = "Dive"
+    climb = "Climb"
+    ledge_grab = "Ledge Grab"
+
     motion_controls = "Motion Controls"
     check_point_warping = "Checkpoint Warping"
+
+    # Theoretical
+    cappy_return_jump = "Cappy Return Jump"
+    cappy_bounce = "Cappy Bounce" # Technically a type of vault just airborne
+    rainbow_spin = "Rainbow Spin"
 
     # Flag
     beat_bowser_in_cloud = "Beat Bowser in Cloud"
@@ -298,3 +309,7 @@ class SMOItemData:
     easy_glitches = "Easy Glitches"
     intermediate_glitches = "Intermediate Glitches"
     hard_glitches = "Hard Glitches"
+
+    # Glitches and Tricks shorthand
+    surface_clip = "Surface Clip"
+    roll_cancel_clip = "Roll Cancel Clip"
