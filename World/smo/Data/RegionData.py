@@ -76,6 +76,8 @@ class SMORegion:
 
     night_metro_kingdom = "Night Metro Kingdom"
     day_metro_kingdom = "Day Metro Kingdom"
+    metro_kingdom_park = "Metro Kingdom Park"
+    metro_kingdom_island = "Metro Kingdom Island"
 
     metro_kingdom_peace = "Metro Kingdom Peace"
     metro_kingdom_moon_rock = "Metro Kingdom Moon Rock"

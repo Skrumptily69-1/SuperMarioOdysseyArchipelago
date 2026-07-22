@@ -5,7 +5,7 @@ from BaseClasses import Entrance, EntranceType, Region
 
 #Relevant Functions: Has, HasAll, HasAny, HasGroup, And, Or, Filtered, CanReachLocation, CanReachRegion
 from rule_builder.rules import *
-from worlds.SuperMarioOdysseyArchipelago.World.smo.Items import SMOItem
+from .Options import TrickJumpLogic
 
 from .Data.EntranceData import SMOEntranceData
 from .Data.ItemData import SMOItemData
@@ -1942,6 +1942,9 @@ stage_ids = [
     'aaaSand',
 ]
 
+def create_entrance_name(kingdom_name: str, region_name: str, entrance_type: str, unique: bool) -> str:
+    return f"{kingdom_name} {region_name} {'Unique Exit' if unique else ''} {entrance_type}"
+
 def create_entrances(self):
     world_sub_area_exits = [
         # (SMORegion.cap_kingdom_intro, {
@@ -1956,7 +1959,7 @@ def create_entrances(self):
                 CanReachRegion(SMORegion.cap_kingdom_topper)
             ),
             SMOEntranceData.frog_pond: HasAny(*cappy),
-            SMOEntranceData.rolling_lane: Has(SMOItemData),
+            SMOEntranceData.rolling_lane: CanReachRegion(SMORegion.cap_kingdom_moon_rock),
         }),
         (SMORegion.cap_kingdom_topper, {
             SMOEntranceData.push_blocks: HasAny(*cappy)
@@ -1964,66 +1967,44 @@ def create_entrances(self):
         # (SMORegion.cap_kingdom_moon_rock, {}
         #
         # , SMORuleOperation.NONE)
-        (SMORegion.cascade_kingdom, {
-            SMOEntranceData.chasm_lifts: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cascade_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.t_rex_nest: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cascade_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.chain_chomp_cave: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cascade_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.gusty_bridges: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cascade_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.mysterious_clouds: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cascade_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+        (SMORegion.cascade_kingdom, { #SMORegion.cascade_kingdom_lower
+            SMOEntranceData.chasm_lifts: CanReachRegion(SMORegion.cascade_kingdom_peace),
+            SMOEntranceData.t_rex_nest: CanReachRegion(SMORegion.cascade_kingdom_peace),
+            SMOEntranceData.chain_chomp_cave: CanReachRegion(SMORegion.cascade_kingdom_peace),
+            SMOEntranceData.gusty_bridges: CanReachRegion(SMORegion.cascade_kingdom_moon_rock),
+            SMOEntranceData.mysterious_clouds: CanReachRegion(SMORegion.cascade_kingdom_moon_rock),
         }),
         # (SMORegion.cascade_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.sand_kingdom, {
-            SMOEntranceData.ice_cave: None,
-            SMOEntranceData.bullet_bill_maze: None,
-            SMOEntranceData.jaxi_ruins: None,
-            SMOEntranceData.inverted_pyramid_lower_interior: None,
-            SMOEntranceData.inverted_pyramid_upper_interior: create_access_rule(self, [
-                (SMORuleCondition.ENTRANCE,
-                 [SMORegion.sand_kingdom, f"{SMOEntranceData.inverted_pyramid_lower_interior} Unique Exit",
-                  SMOEntranceDataType.EXIT], SMORuleOperation.OR),
-                (SMORuleCondition.ENTRANCE,
-                 [SMORegion.sand_kingdom, f"{SMOEntranceData.inverted_pyramid_upper_interior} Unique Exit",
-                  SMOEntranceDataType.EXIT], SMORuleOperation.NONE)
-            ]),
-            SMOEntranceData.moe_eye_invisible_maze: None,
-            SMOEntranceData.sand_kingdom_shop: None,
-            SMOEntranceData.sand_sphynx_vault: None,
-            SMOEntranceData.underground_ruins: None,
-            SMOEntranceData.sand_costume_bonus_dancing_room : (create_access_rule(self, [
-                (SMORuleCondition.ITEM ,[SMOItemData.sombrero, SMOItemData.poncho], SMORuleOperation.OR),
-                (SMORuleCondition.ITEM, [SMOItemData.skeleton_suit], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.sand_slots: None,
-            SMOEntranceData.sand_kingdom_employee: None,
-            SMOEntranceData.sand_rumbling_floor_house: None,
-            SMOEntranceData.deepest_underground_shortcut: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.sand_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.strange_neighborhood: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, [SMOItemData.mini_rocket], SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.sand_kingdom_peace, SMORuleOperation.NONE)
-                 ])),
-            SMOEntranceData.colossal_ruins: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.sand_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.freezing_waterway: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.sand_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.moe_eye_invisible_floor: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.sand_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.ice_cave: True_(),
+            SMOEntranceData.bullet_bill_maze: True_(),
+            SMOEntranceData.jaxi_ruins: True_(),
+            SMOEntranceData.inverted_pyramid_lower_interior: True_(),
+            SMOEntranceData.inverted_pyramid_upper_interior: Or(
+                CanReachEntrance(create_entrance_name(SMORegion.sand_kingdom, SMOEntranceData.inverted_pyramid_lower_interior, SMOEntranceDataType.EXIT, True)),
+                CanReachEntrance(create_entrance_name(SMORegion.sand_kingdom, SMOEntranceData.inverted_pyramid_upper_interior, SMOEntranceDataType.EXIT, True))
+            ),
+            SMOEntranceData.moe_eye_invisible_maze: HasAny(*cappy),
+            SMOEntranceData.sand_kingdom_shop: True_(),
+            SMOEntranceData.sand_sphynx_vault: True_(), # CanTalk?
+            SMOEntranceData.underground_ruins: CanReachRegion(SMORegion.inverted_pyramid_top),
+            SMOEntranceData.sand_costume_bonus_dancing_room : Or(
+                HasAll(SMOItemData.sombrero, SMOItemData.poncho), # If shopsanity/regionalcoinsanity is on?
+                Has(SMOItemData.skeleton_suit)
+            ),
+            SMOEntranceData.sand_slots: True_(),
+            SMOEntranceData.sand_kingdom_employee: True_(),
+            SMOEntranceData.sand_rumbling_floor_house: True_(),
+            SMOEntranceData.deepest_underground_shortcut: CanReachRegion(SMORegion.sand_kingdom_peace),
+            SMOEntranceData.strange_neighborhood: And(
+                CanCapture(SMOItemData.mini_rocket),
+                CanReachRegion(SMORegion.sand_kingdom_peace)
+            ),
+            SMOEntranceData.colossal_ruins: CanReachRegion(SMORegion.sand_kingdom_moon_rock),
+            SMOEntranceData.freezing_waterway: CanReachRegion(SMORegion.sand_kingdom_moon_rock),
+            SMOEntranceData.moe_eye_invisible_floor: CanReachRegion(SMORegion.sand_kingdom_moon_rock),
         }),
         # (SMORegion.sand_kingdom_peace, {
         #
@@ -2035,35 +2016,25 @@ def create_entrances(self):
         #
         # }),
         (SMORegion.wooded_kingdom, {
-            SMOEntranceData.sky_garden_tower: None,
-            SMOEntranceData.deep_woods_1: None,
-            SMOEntranceData.deep_woods_3: None,
-            SMOEntranceData.flooding_pipeway: None,
-            SMOEntranceData.sherm_elevator: None,
-            SMOEntranceData.wooded_flower_road: None,
-            SMOEntranceData.secret_flower_field: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.sherm, SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.wooded_kingdom_post_broodals, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.spinning_platforms_treasure_vault: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.wooded_kingdom_post_broodals, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.walking_on_clouds: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.cascade_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.fog_wandering: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.mini_rocket, SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.wooded_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.sheep_herding: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.wooded_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.invisible_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.wooded_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.breakdown_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.wooded_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.sky_garden_tower: True_(), #SMORegion.wooded_kingdom_sky_garden_road
+            SMOEntranceData.deep_woods_1: True_(),
+            SMOEntranceData.deep_woods_3: True_(),
+            SMOEntranceData.flooding_pipeway: True_(), #CanSwim
+            SMOEntranceData.sherm_elevator: True_(), #SMORegion.wooded_kingdom_summit
+            SMOEntranceData.wooded_flower_road: HasAny(*cappy), #SMORegion.wooded_kingdom_summit
+            SMOEntranceData.secret_flower_field: And( #SMORegion.wooded_kingdom_summit
+                CanCapture(SMOItemData.sherm),
+                CanReachRegion(SMORegion.wooded_kingdom_post_broodals)
+            ),
+            SMOEntranceData.spinning_platforms_treasure_vault: CanReachRegion(SMORegion.wooded_kingdom_post_broodals), #SMORegion.wooded_kingdom_summit
+            SMOEntranceData.walking_on_clouds: CanReachRegion(SMORegion.wooded_kingdom_moon_rock), #SMORegion.wooded_kingdom_summit
+            SMOEntranceData.fog_wandering: And( #SMORegion.wooded_kingdom_rock_wall
+                CanCapture(SMOItemData.mini_rocket),
+                CanReachRegion(SMORegion.wooded_kingdom_post_broodals)
+            ),
+            SMOEntranceData.sheep_herding: CanReachRegion(SMORegion.wooded_kingdom_moon_rock), #SMORegion.wooded_kingdom_rock_wall)
+            SMOEntranceData.invisible_road: CanReachRegion(SMORegion.wooded_kingdom_moon_rock), #SMORegion.wooded_kingdom_summit)
+            SMOEntranceData.breakdown_road: CanReachRegion(SMORegion.wooded_kingdom_moon_rock) #SMORegion.wooded_kingdom_start)
         }),
         # (SMORegion.wooded_kingdom_post_broodals, {
         #
@@ -2074,114 +2045,88 @@ def create_entrances(self):
         #
         # }),
         (SMORegion.deep_woods, {
-            SMOEntranceData.deep_woods_costume_bonus_treasure_chest: (create_access_rule( self, [
-                (SMORuleCondition.ITEM, [SMOItemData.explorer_hat, SMOItemData.explorer_outfit], SMORuleOperation.NONE),
-            ])),
-            SMOEntranceData.deep_woods_treasure_trap: None,
-            SMOEntranceData.deep_woods_2: None,
-            SMOEntranceData.deep_woods_4: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.wooded_kingdom_post_broodals, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.deep_woods_costume_bonus_treasure_chest: HasAll(SMOItemData.explorer_hat, SMOItemData.explorer_outfit), # If shopsanity/regionalcoinsanity is on?
+            SMOEntranceData.deep_woods_treasure_trap: True_(),
+            SMOEntranceData.deep_woods_2: Has(SMOItemData.climb),
+            SMOEntranceData.deep_woods_4: And(
+                Has(SMOItemData.climb),
+                CanReachRegion(SMORegion.wooded_kingdom_post_broodals)
+            ),
         }),
         (SMORegion.lake_kingdom, {
-            SMOEntranceData.arch_repair: None,
-            SMOEntranceData.zipper_chasm: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, [SMOItemData.zipper], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.bouncy_flowers: None,
-            SMOEntranceData.lake_kingdom_shop: None,
-            SMOEntranceData.poison_swamp: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.lake_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.arch_repair: HasAny(*cappy), #Lake Kingdom Underwater
+            SMOEntranceData.zipper_chasm: CanCapture(SMOItemData.zipper), #Lake Kingdom Underwater
+            SMOEntranceData.bouncy_flowers: True_(), #Lake Kingdom Town
+            SMOEntranceData.lake_kingdom_shop: True_(), #Lake Kingdom Town
+            SMOEntranceData.poison_swamp: CanReachRegion(SMORegion.lake_kingdom_moon_rock), #Lake Kingdom Odyssey
         }),
         # (SMORegion.lake_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.cloud_kingdom_revisit, {
-            SMOEntranceData.cloud_picture_match: None,
-            SMOEntranceData.king_of_the_cube: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.cloud_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.cloud_picture_match: True_(),
+            SMOEntranceData.king_of_the_cube: CanReachRegion(SMORegion.cloud_kingdom_moon_rock)
         }),
         # (SMORegion.cloud_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.lost_kingdom, {
-            SMOEntranceData.lost_kingdom_shop: None,
-            SMOEntranceData.klepto_lava_bath: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.lost_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.tropical_wiggler_swamp: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.lost_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.lost_kingdom_shop: True_(), #Lost Kingdom Top
+            SMOEntranceData.klepto_lava_bath: CanReachRegion(SMORegion.lost_kingdom_moon_rock),
+            SMOEntranceData.tropical_wiggler_swamp: CanReachRegion(SMORegion.lost_kingdom_moon_rock),
         }),
         # (SMORegion.lost_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.night_metro_kingdom, {
-            SMOEntranceData.city_hall: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.spark_pylon, SMORuleOperation.OR),
-                (SMORuleCondition.TRICK_EASY, SMORuleCondition.CAPTURE, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.metro_kingdom_shop: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.spark_pylon, SMORuleOperation.OR),
-                (SMORuleCondition.TRICK_EASY, SMORuleCondition.CAPTURE, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.metro_kingdom_shop_regional: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.spark_pylon, SMORuleOperation.OR),
-                (SMORuleCondition.TRICK_EASY, SMORuleCondition.CAPTURE, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.private_room: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.bullet_building: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.rc_race: (create_access_rule(self, [
-                    (SMORuleCondition.CAPTURE, SMOItemData.rc_car, SMORuleOperation.AND),
-                    (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.builder_outfit: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.AND),
-                (SMORuleCondition.ITEM, [SMOItemData.builder_helmet, SMOItemData.builder_outfit], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.metro_slots: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.rotating_maze: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.manhole, SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.t_rex_escape: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.crowded_street: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.metro_siege: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.taxi, SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.high_rise: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.mini_rocket, SMORuleOperation.AND),
-                (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.sewers: (create_access_rule(self, [
-                    (SMORuleCondition.CAPTURE, SMOItemData.manhole, SMORuleOperation.AND),
-                    (SMORuleCondition.REGION, SMORegion.day_metro_kingdom, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.projection_room: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.metro_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.swinging_scaffolding: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.metro_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.vanishing_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.metro_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.pitch_black_island: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.metro_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.city_hall: Or( #Will be handled by SMORegion.metro_kingdom_odyssey -> SMORegion.night_metro_kingdom
+                CanCapture(SMOItemData.spark_pylon),
+                HasAll(SMOItemData.ground_pound, SMOItemData.roll, SMOItemData.vault, SMOItemData.dive,
+                    options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")])
+            ),
+            SMOEntranceData.metro_kingdom_shop: Or( #Will be handled by SMORegion.metro_kingdom_odyssey -> SMORegion.night_metro_kingdom
+                CanCapture(SMOItemData.spark_pylon),
+                HasAll(SMOItemData.ground_pound, SMOItemData.roll, SMOItemData.vault, SMOItemData.dive,
+                    options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")])
+            ),
+            SMOEntranceData.metro_kingdom_shop_regional: Or( #Will be handled by SMORegion.metro_kingdom_odyssey -> SMORegion.night_metro_kingdom
+                CanCapture(SMOItemData.spark_pylon),
+                HasAll(SMOItemData.ground_pound, SMOItemData.roll, SMOItemData.vault, SMOItemData.dive,
+                    options=[OptionFilter(TrickJumpLogic, TrickJumpLogic.option_easy, operator="ge")])
+            ),
+            SMOEntranceData.private_room: CanReachRegion(SMORegion.day_metro_kingdom),
+            SMOEntranceData.bullet_building: CanReachRegion(SMORegion.day_metro_kingdom),
+            SMOEntranceData.rc_race: And(
+                CanCapture(SMOItemData.rc_car),
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.builder_outfit: And(
+                HasAll(SMOItemData.builder_helmet, SMOItemData.builder_outfit), #If shopsanity/regionalcoinsanity is on?
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.metro_slots: CanReachRegion(SMORegion.day_metro_kingdom),
+            SMOEntranceData.rotating_maze: And(
+                CanCapture(SMOItemData.manhole),
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.t_rex_escape: CanReachRegion(SMORegion.day_metro_kingdom),
+            SMOEntranceData.crowded_street: CanReachRegion(SMORegion.day_metro_kingdom),
+            SMOEntranceData.metro_siege: And(
+                CanCapture(SMOItemData.taxi),
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.high_rise: And( #metro_kingdom_island
+                CanCapture(SMOItemData.mini_rocket),
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.sewers: And(
+                CanCapture(SMOItemData.manhole),
+                CanReachRegion(SMORegion.day_metro_kingdom)
+            ),
+            SMOEntranceData.projection_room: CanReachRegion(SMORegion.metro_kingdom_moon_rock),
+            SMOEntranceData.swinging_scaffolding: CanReachRegion(SMORegion.metro_kingdom_moon_rock),
+            SMOEntranceData.vanishing_road: CanReachRegion(SMORegion.metro_kingdom_moon_rock),
+            SMOEntranceData.pitch_black_island: CanReachRegion(SMORegion.metro_kingdom_moon_rock),
         }),
         # (SMORegion.day_metro_kingdom, {
         #     }),
@@ -2191,49 +2136,33 @@ def create_entrances(self):
         # (SMORegion.metro_kingdom_moon_rock, {
         #
         # }),
-        (SMORegion.seaside_kingdom, {
-            SMOEntranceData.seaside_rumbling_floor_cave: None,
-            SMOEntranceData.spinning_maze: None,
-            SMOEntranceData.wading_in_the_cloud_sea: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.mini_rocket, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.sandy_bottom: None,
-            SMOEntranceData.narrow_valley: None,
-            SMOEntranceData.sinking_island: None,
-            SMOEntranceData.seaside_costume_bonus_dancing_room: None,
-            SMOEntranceData.seaside_sphynx_treasure_vault: None,
-            SMOEntranceData.underwater_tunnel: None,
-            SMOEntranceData.pokio_bomb_aiming: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.seaside_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+        (SMORegion.seaside_kingdom, { #Which ones are underwater?
+            SMOEntranceData.seaside_rumbling_floor_cave: True_(),
+            SMOEntranceData.spinning_maze: True_(),
+            SMOEntranceData.wading_in_the_cloud_sea: CanCapture(SMOItemData.mini_rocket),
+            SMOEntranceData.sandy_bottom: True_(),
+            SMOEntranceData.narrow_valley: True_(),
+            SMOEntranceData.sinking_island: True_(),
+            SMOEntranceData.seaside_costume_bonus_dancing_room: True_(), #If shopsanity/regionalcoinsanity is on? Also Costume logic in general
+            SMOEntranceData.seaside_sphynx_treasure_vault: True_(),
+            SMOEntranceData.underwater_tunnel: True_(),
+            SMOEntranceData.pokio_bomb_aiming: CanReachRegion(SMORegion.seaside_kingdom_moon_rock),
         }),
         # (SMORegion.seaside_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.snow_kingdom, {
-            SMOEntranceData.shiveria: None,
-            SMOEntranceData.rocket_flower_dash: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.ty_foo_sliding_puzzle: (create_access_rule(self, [
-                    (SMORuleCondition.CAPTURE, SMOItemData.ty_foo, SMORuleOperation.AND),
-                    (SMORuleCondition.REGION ,SMORegion.snow_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.ice_trace_walking: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.above_the_clouds: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.freezing_water: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.snow_flower_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.iceburn_circuit_class_a_lobby: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.snow_kingdom_moon_rock, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.shiveria: True_(),
+            SMOEntranceData.rocket_flower_dash: CanReachRegion(SMORegion.snow_kingdom_peace),
+            SMOEntranceData.ty_foo_sliding_puzzle: And(
+                CanCapture(SMOItemData.ty_foo),
+                CanReachRegion(SMORegion.snow_kingdom_peace)
+            ),
+            SMOEntranceData.ice_trace_walking: CanReachRegion(SMORegion.snow_kingdom_peace),
+            SMOEntranceData.above_the_clouds: CanReachRegion(SMORegion.snow_kingdom_peace),
+            SMOEntranceData.freezing_water: CanReachRegion(SMORegion.snow_kingdom_peace),
+            SMOEntranceData.snow_flower_road: CanReachRegion(SMORegion.snow_kingdom_moon_rock),
+            SMOEntranceData.iceburn_circuit_class_a_lobby: CanReachRegion(SMORegion.snow_kingdom_moon_rock),
         }),
         # (SMORegion.snow_kingdom_peace, {
         #
@@ -2242,41 +2171,21 @@ def create_entrances(self):
         #
         # }),
         (SMORegion.luncheon_kingdom, {
-            SMOEntranceData.magma_swamp: None,
-            SMOEntranceData.fork_flickin: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_post_broodals, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.luncheon_kingdom_shop: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_post_broodals, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.luncheon_costume_bonus_cooking_pots: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_post_broodals, SMORuleOperation.AND),
-                (SMORuleCondition.ITEM,[SMOItemData.chef_hat, SMOItemData.chef_suit], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.luncheon_slots: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_post_broodals, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.cheese_excavate: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_meat, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.spinning_athletics: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_meat, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.magma_narrow_path: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_meat, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.luncheon_treasure_vault: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_meat, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.volcano_cave: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.rotating_gears_with_bitefrost: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.lava_islands: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.luncheon_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.magma_swamp: True_(),
+            SMOEntranceData.fork_flickin: CanReachRegion(SMORegion.luncheon_kingdom_post_broodals),
+            SMOEntranceData.luncheon_kingdom_shop: CanReachRegion(SMORegion.luncheon_kingdom_post_broodals),
+            SMOEntranceData.luncheon_costume_bonus_cooking_pots: And(
+                CanReachRegion(SMORegion.luncheon_kingdom_post_broodals),
+                HasAll(SMOItemData.chef_hat, SMOItemData.chef_suit) #If shopsanity/regionalcoinsanity is on?
+            ),
+            SMOEntranceData.luncheon_slots: CanReachRegion(SMORegion.luncheon_kingdom_post_broodals),
+            SMOEntranceData.cheese_excavate: CanReachRegion(SMORegion.luncheon_kingdom_meat),
+            SMOEntranceData.spinning_athletics: CanReachRegion(SMORegion.luncheon_kingdom_meat),
+            SMOEntranceData.magma_narrow_path: CanReachRegion(SMORegion.luncheon_kingdom_meat),
+            SMOEntranceData.luncheon_treasure_vault: CanReachRegion(SMORegion.luncheon_kingdom_meat),
+            SMOEntranceData.volcano_cave: CanReachRegion(SMORegion.luncheon_kingdom_moon_rock),
+            SMOEntranceData.rotating_gears_with_bitefrost: CanReachRegion(SMORegion.luncheon_kingdom_moon_rock),
+            SMOEntranceData.lava_islands: CanReachRegion(SMORegion.luncheon_kingdom_moon_rock)
         }),
         # (SMORegion.luncheon_kingdom_post_broodals, {
         #
@@ -2289,42 +2198,24 @@ def create_entrances(self):
         #
         # }),
         (SMORegion.ruined_kingdom, {
-            SMOEntranceData.roulette_tower: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE,[SMORegion.mini_rocket], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.chargin_chuck_arena: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.ruined_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.roulette_tower: CanCapture(SMOItemData.mini_rocket), # ruined_kingdom_dragon
+            SMOEntranceData.chargin_chuck_arena: CanReachRegion(SMORegion.ruined_kingdom_moon_rock)
         }),
         # (SMORegion.ruined_kingdom_moon_rock, {
         #
         # }),
         (SMORegion.infiltrate_bowsers_castle, {
-            SMOEntranceData.bowsers_kingdom_shop: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_smart_bombing, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.folding_screen: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_smart_bombing, SMORuleOperation.AND),
-                (SMORuleCondition.ITEM,[SMOItemData.samurai_helmet, SMOItemData.samurai_armor], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.dashing_above_the_clouds: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_mecha_broodal, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.spinning_tower: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_peace, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.jizos_adventure: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_peace, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.bowsers_treasure_vault: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_peace, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.hexagon_tower: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.wooden_tower: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.bowser_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.bowsers_kingdom_shop: CanReachRegion(SMORegion.bowser_kingdom_smart_bombing),
+            SMOEntranceData.folding_screen: And(
+                CanReachRegion(SMORegion.bowser_kingdom_smart_bombing),
+                HasAll(SMOItemData.samurai_helmet, SMOItemData.samurai_armor) #If shopsanity/regionalcoinsanity is on?
+            ),
+            SMOEntranceData.dashing_above_the_clouds: CanReachRegion(SMORegion.bowser_kingdom_mecha_broodal),
+            SMOEntranceData.spinning_tower: CanReachRegion(SMORegion.bowser_kingdom_peace),
+            SMOEntranceData.jizos_adventure: CanReachRegion(SMORegion.bowser_kingdom_peace),
+            SMOEntranceData.bowsers_treasure_vault: CanReachRegion(SMORegion.bowser_kingdom_peace),
+            SMOEntranceData.hexagon_tower: CanReachRegion(SMORegion.bowser_kingdom_moon_rock),
+            SMOEntranceData.wooden_tower: CanReachRegion(SMORegion.bowser_kingdom_moon_rock),
         }),
         # (SMORegion.bowser_kingdom_smart_bombing, {
         #     }),
@@ -2338,88 +2229,65 @@ def create_entrances(self):
         #
         # }),
         (SMORegion.moon_kingdom, {
-            SMOEntranceData.inside_the_church: None,
-            SMOEntranceData.moon_cave: None,
+            SMOEntranceData.inside_the_church: True_(),
+            SMOEntranceData.moon_cave: True_(),
         }),
         (SMORegion.moon_kingdom_peace, {
-            SMOEntranceData.moon_sphynx_vault: None,
-            SMOEntranceData.moon_kingdom_shop: None,
+            SMOEntranceData.moon_sphynx_vault: True_(),
+            SMOEntranceData.moon_kingdom_shop: True_(),
         }),
         (SMORegion.moon_kingdom_moon_rock, {
-            SMOEntranceData.giant_swings: None,
-            SMOEntranceData.dot_galaxy: None,
+            SMOEntranceData.giant_swings: True_(),
+            SMOEntranceData.dot_galaxy: True_(),
         }),
         (SMORegion.mushroom_kingdom, {
-            SMOEntranceData.peachs_castle: None,
-            SMOEntranceData.mushroom_kingdom_shop: None,
-            SMOEntranceData.painting_room_cookatiel: None,
-            SMOEntranceData.painting_room_mecha_wiggler: None,
-            SMOEntranceData.painting_room_knucklotec: None,
-            SMOEntranceData.painting_room_torkdrift: None,
-            SMOEntranceData.mushroom_well: None,
-            SMOEntranceData.yoshi_in_the_sea_of_clouds: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.yoshi, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.painting_room_mollusque_lanceur: None,
-            SMOEntranceData.painting_room_lord_of_lightning: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.yoshi, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.mushroom_picture_match : (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.mini_rocket, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.castle_courtyard : (create_access_rule(self, [
-                (SMORuleCondition.ITEM, [SMOItemData.mario_64_cap, SMOItemData.mario_64_suit], SMORuleOperation.OR),
-                (SMORuleCondition.ITEM, [SMOItemData.metal_mario_cap, SMOItemData.metal_mario_suit], SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.peachs_castle: True_(),
+            SMOEntranceData.mushroom_kingdom_shop: True_(),
+            SMOEntranceData.painting_room_cookatiel: True_(),
+            SMOEntranceData.painting_room_mecha_wiggler: True_(),
+            SMOEntranceData.painting_room_knucklotec: True_(),
+            SMOEntranceData.painting_room_torkdrift: True_(),
+            SMOEntranceData.mushroom_well: True_(),
+            SMOEntranceData.yoshi_in_the_sea_of_clouds: CanCapture(SMOItemData.yoshi),
+            SMOEntranceData.painting_room_mollusque_lanceur: True_(),
+            SMOEntranceData.painting_room_lord_of_lightning: CanCapture(SMOItemData.yoshi),
+            SMOEntranceData.mushroom_picture_match : CanCapture(SMOItemData.mini_rocket),
+            SMOEntranceData.castle_courtyard : Or(
+                HasAll(SMOItemData.mario_64_cap, SMOItemData.mario_64_suit),
+                HasAll(SMOItemData.metal_mario_cap, SMOItemData.metal_mario_suit),
+            )
         }),
         (SMORegion.dark_side, {
-            SMOEntranceData.dark_side_topper: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.spark_pylon, SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.dark_side_vanishing_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.dark_side_invisible_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.dark_side_breakdown_road: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.dark_side_siege: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.dark_side_sinking_island: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
-            SMOEntranceData.dark_side_magma_swamp: (create_access_rule(self, [
-                (SMORuleCondition.REGION,SMORegion.dark_side_peace, SMORuleOperation.NONE)
-                ])),
+            SMOEntranceData.dark_side_topper: CanCapture(SMOItemData.spark_pylon),
+            SMOEntranceData.dark_side_vanishing_road: CanReachRegion(SMORegion.dark_side_peace),
+            SMOEntranceData.dark_side_invisible_road: CanReachRegion(SMORegion.dark_side_peace),
+            SMOEntranceData.dark_side_breakdown_road: CanReachRegion(SMORegion.dark_side_peace),
+            SMOEntranceData.dark_side_siege: CanReachRegion(SMORegion.dark_side_peace),
+            SMOEntranceData.dark_side_sinking_island: CanReachRegion(SMORegion.dark_side_peace),
+            SMOEntranceData.dark_side_magma_swamp: CanReachRegion(SMORegion.dark_side_peace),
         }),
         (SMORegion.dark_side_2 , {
-            SMOEntranceData.dark_side_hariet: None,
+            SMOEntranceData.dark_side_hariet: True_(),
         }),
         (SMORegion.dark_side_3 , {
-            SMOEntranceData.dark_side_spewart: None,
+            SMOEntranceData.dark_side_spewart: True_(),
         }),
         (SMORegion.dark_side_4 , {
-            SMOEntranceData.dark_side_rango: None,
+            SMOEntranceData.dark_side_rango: True_(),
         }),
 
         # (SMORegion.dark_side_peace, {
         #
         # }),
         (SMORegion.darker_side, {
-            SMOEntranceData.darker_side_main: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.frog, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.darker_side_main: CanCapture(SMOItemData.frog)
         }),
         (SMORegion.darker_side_entrance, {
-            SMOEntranceData.darker_side_pokio: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, [SMOItemData.lava_bubble, SMOItemData.uproot, SMOItemData.yoshi, SMOItemData.glydon, SMOItemData.volbonan], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.darker_side_bowser: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.pokio, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.darker_side_pokio: And(
+                CanCapture(SMOItemData.lava_bubble),
+                HasAll(SMOItemData.uproot, SMOItemData.yoshi, SMOItemData.glydon, SMOItemData.volbonan)
+            ),
+            SMOEntranceData.darker_side_bowser: CanCapture(SMOItemData.pokio)
         }),
         # (SMORegion.darker_side_climb, {
         #
@@ -2452,18 +2320,17 @@ def create_entrances(self):
         #     SMOEntranceData.top_of_the_inverted_pyramid: None,
         # }),
         (SMORegion.underground_ruins, {
-            SMOEntranceData.deepest_underground: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, [SMOItemData.bullet_bill, SMOItemData.knucklotecs_fist], SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.deepest_underground: And(
+                CanCapture(SMOItemData.bullet_bill),
+                CanCapture(SMOItemData.knucklotecs_fist)
+            )
         }),
 
 
         (SMORegion.shiveria, {
-            SMOEntranceData.snowline_circuit_lobby: None,
-            SMOEntranceData.freezing_room: (create_access_rule(self, [
-                (SMORuleCondition.ITEM, [SMOItemData.snow_hood, SMOItemData.snow_suit], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.snow_kingdom_shop: None,
+            SMOEntranceData.snowline_circuit_lobby: True_(),
+            SMOEntranceData.freezing_room: HasAll(SMOItemData.snow_hood, SMOItemData.snow_suit), # If shopsanity/regionalcoinsanity is on?
+            SMOEntranceData.snow_kingdom_shop: True_(),
         }),
 
 
@@ -2472,22 +2339,22 @@ def create_entrances(self):
 
 
         (SMORegion.painting_room_knucklotec, {
-            SMOEntranceData.knucklotec_rematch: None,
+            SMOEntranceData.knucklotec_rematch: Has(SMOItemData.jump),
         }),
         (SMORegion.painting_room_torkdrift, {
-            SMOEntranceData.torkdrift_rematch: None,
+            SMOEntranceData.torkdrift_rematch: Has(SMOItemData.jump),
         }),
         (SMORegion.painting_room_mecha_wiggler, {
-            SMOEntranceData.mecha_wiggler_rematch: None,
+            SMOEntranceData.mecha_wiggler_rematch: Has(SMOItemData.jump),
         }),
         (SMORegion.painting_room_mollusque_lanceur, {
-            SMOEntranceData.mollusque_lanceur_rematch: None,
+            SMOEntranceData.mollusque_lanceur_rematch: Has(SMOItemData.jump),
         }),
         (SMORegion.painting_room_cookatiel, {
-            SMOEntranceData.cookatiel_rematch: None,
+            SMOEntranceData.cookatiel_rematch: Has(SMOItemData.jump),
         }),
         (SMORegion.painting_room_lord_of_lightning, {
-            SMOEntranceData.lord_of_lightning_rematch: None,
+            SMOEntranceData.lord_of_lightning_rematch: Has(SMOItemData.jump),
         }),
 
 
