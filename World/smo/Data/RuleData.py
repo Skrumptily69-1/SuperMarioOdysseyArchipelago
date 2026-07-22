@@ -6,7 +6,7 @@ from rule_builder.rules import *
 from .EntranceData import SMOEntranceData
 from .ItemData import SMOItemData as items
 from .LocationData import SMOLocationData as loc
-from ..Options import SMOOptions as opts, TrickJumpLogic
+from ..Options import SMOOptions as opts, TrickJumpLogic, CaptureSanity
 from .RegionData import SMORegion
 
 
@@ -106,7 +106,7 @@ class CanCapture(Rule[TWorld], game="Super Mario Odyssey"):
 
     @override
     def _instantiate(self, world: TWorld) -> Rule.Resolved:
-        return self.Resolved(
+        return (True_() if OptionFilter(CaptureSanity, 1).check(world.options) else self).Resolved(
             resolve_field(self.item_name, world, str),
             player=world.player,
             caching_enabled=getattr(world, "rule_caching_enabled", False),
@@ -122,9 +122,9 @@ class CanCapture(Rule[TWorld], game="Super Mario Odyssey"):
 
         @override
         def _evaluate(self, state: CollectionState) -> bool:
-            # implementation based on state.has
             return (state.prog_items[self.player][self.item_name] >= 0
-                and state.has_any(cappy, self.player))
+                and state.has_any(cappy, self.player)
+                and state.can_reach_region(self.item_name, self.player))
 
         @override
         def item_dependencies(self) -> dict[str, set[int]]:
@@ -1932,6 +1932,8 @@ regional_rule_data : dict[str, Rule] = {
     ],
     #endregion
 }
+
+
     """
     Potentially relevant code salvaged from Rules.py
 

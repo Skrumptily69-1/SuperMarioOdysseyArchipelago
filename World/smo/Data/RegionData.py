@@ -21,33 +21,62 @@ class SMORegion:
 
     # Kingdom Regions
     cap_kingdom_intro = "Cap Kingdom Intro"
-    cap_kingdom_topper = "Cap Kingdom Topper"
+    cap_kingdom_topper = "Cap Kingdom Top of Top Hat Tower"
     cap_kingdom = "Cap Kingdom"
+
     cap_kingdom_moon_rock = "Cap Kingdom Moon Rock"
+
+    cascade_kingdom_lower = "Cascade Kingdom Lower"
+    cascade_kingdom_upper = "Cascade Kingdom Upper"
+
     cascade_kingdom = "Cascade Kingdom"
     cascade_kingdom_peace = "Cascade Kingdom Peace"
     cascade_kingdom_revisit = "Cascade Kingdom Revisit"
     cascade_kingdom_moon_rock = "Cascade Kingdom Moon Rock"
+
+
     sand_kingdom = "Sand Kingdom"
+    inverted_pyramid_top = "Top of the Inverted Pyramid"
+
     night_sand_kingdom = "Night Sand Kingdom"
     top_of_the_inverted_pyramid = "Top of the Inverted Pyramid"
     top_of_the_inverted_pyramid_peace = "Top of the Inverted Pyramid Peace"
     sand_kingdom_peace = "Sand Kingdom Peace"
     sand_kingdom_moon_rock = "Sand Kingdom Moon Rock"
+
+    wooded_kingdom_start = "Wooded Kingdom Start"
+    wooded_kingdom_sky_road = "Wooded Kingdom Sky Garden Road"
+    wooded_kingdom_cliffside = "Wooded Kingdom Cliffside"
+    wooded_kingdom_spewer = "Top of Sky Garden Tower"
+    wooded_kingdom_rock_wall = "Wooded Kingdom Rock Wall"
+    wooded_kingdom_summit_path = "Wooded Kingdom Summit"
+
     wooded_kingdom = "Wooded Kingdom"
     wooded_kingdom_post_broodals = "Wooded Kingdom Post Broodals"
     wooded_kingdom_peace = "Wooded Kingdom Peace"
     wooded_kingdom_moon_rock = "Wooded Kingdom Moon Rock"
+
+    lake_kingdom_start = "Lake Kingdom Odyssey"
+    lake_kingdom_pond = "Lake Kingdom Fishing Pond"
+    lake_kingdom_water = "Lake Kingdom Underwater"
+    lake_kingdom_town = "Lake Kingdom Town"
+
     lake_kingdom = "Lake Kingdom"
     lake_kingdom_moon_rock = "Lake Kingdom Moon Rock"
     cloud_kingdom_boss_fight = "Cloud Kingdom Boss Fight"
     cloud_kingdom_revisit = "Cloud Kingdom Revisit"
     cloud_kingdom_moon_rock = "Cloud Kingdom Moon Rock"
+
     lost_kingdom = "Lost Kingdom"
+    #lost_kingdom_klepto = "Lost Kingdom Klepto Trigger"
+    lost_kingdom_top = "Lost Kingdom Top"
+
     lost_kingdom_revisit = "Lost Kingdom Revisit"
     lost_kingdom_moon_rock = "Lost Kingdom Moon Rock"
+
     night_metro_kingdom = "Night Metro Kingdom"
     day_metro_kingdom = "Day Metro Kingdom"
+
     metro_kingdom_peace = "Metro Kingdom Peace"
     metro_kingdom_moon_rock = "Metro Kingdom Moon Rock"
     seaside_kingdom = "Seaside Kingdom"
@@ -327,7 +356,7 @@ class SMORegion:
     shop_luncheon_coin = "Luncheon Kingdom Coin Shop"
     shop_moon_coin = "Moon Kingdom Coin Shop"
     shop_mushroom_coin = "Mushroom Kingdom Coin Shop"
-    
+
     # Regional Coin Regions
     cap_kingdom_regional_groups = 'Cap Kingdom Regional Groups'
     cascade_kingdom_regional_groups = 'Cascade Kingdom Regional Groups'

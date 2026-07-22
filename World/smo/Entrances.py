@@ -1,12 +1,18 @@
 from enum import IntEnum
 from typing import Any, Optional
+
 from BaseClasses import Entrance, EntranceType, Region
+
+#Relevant Functions: Has, HasAll, HasAny, HasGroup, And, Or, Filtered, CanReachLocation, CanReachRegion
+from rule_builder.rules import *
+from worlds.SuperMarioOdysseyArchipelago.World.smo.Items import SMOItem
+
+from .Data.EntranceData import SMOEntranceData
 from .Data.ItemData import SMOItemData
 from .Data.LocationData import SMOLocationData
-from .Data.RuleData import SMORuleCondition, SMORuleOperation, SMOEntranceDataType
-from .Data.EntranceData import SMOEntranceData
 from .Data.RegionData import SMORegion
-from .Rules import create_access_rule
+from .Data.RuleData import SMOEntranceDataType, cappy, CanCapture
+
 
 def get_multi_entrance_type(entrance_name: str, internal_name : str, internal_stage: str, types: tuple[str, str, str] = ("entrance", "exit", "")) -> str:
     special_cases = ["regional", "coin", "shop", "employee"]
@@ -1938,27 +1944,22 @@ stage_ids = [
 
 def create_entrances(self):
     world_sub_area_exits = [
-        (SMORegion.cap_kingdom_intro, {
-            SMOEntranceData.top_hat_tower: None,
-        }),
+        # (SMORegion.cap_kingdom_intro, {
+        #     SMOEntranceData.top_hat_tower: None,
+        # }),
         # (SMORegion.cap_kingdom_topper, {
         #     SMOEntranceData.top_hat_tower_end: None,
         # }),
         (SMORegion.cap_kingdom, {
-            SMOEntranceData.push_blocks: (create_access_rule(self, [
-                (SMORuleCondition.ENTRANCE, [SMORegion.cap_kingdom_intro, SMOEntranceData.top_hat_tower, SMOEntranceDataType.UNIQUE_EXIT], SMORuleOperation.NONE)
-            ])),
-            SMOEntranceData.poison_tides: (create_access_rule(self, [
-                (SMORuleCondition.CAPTURE, SMOItemData.paragoomba, SMORuleOperation.OR),
-                (SMORuleCondition.ENTRANCE,
-                 [SMORegion.cap_kingdom_intro, SMOEntranceData.top_hat_tower, SMOEntranceDataType.UNIQUE_EXIT],
-                 SMORuleOperation.NONE)
-
-            ])),
-            SMOEntranceData.frog_pond: None,
-            SMOEntranceData.rolling_lane: (create_access_rule(self, [
-                (SMORuleCondition.REGION, SMORegion.cap_kingdom_moon_rock, SMORuleOperation.NONE)
-            ])),
+            SMOEntranceData.poison_tides: Or(
+                CanCapture(SMOItemData.paragoomba),
+                CanReachRegion(SMORegion.cap_kingdom_topper)
+            ),
+            SMOEntranceData.frog_pond: HasAny(*cappy),
+            SMOEntranceData.rolling_lane: Has(SMOItemData),
+        }),
+        (SMORegion.cap_kingdom_topper, {
+            SMOEntranceData.push_blocks: HasAny(*cappy)
         }),
         # (SMORegion.cap_kingdom_moon_rock, {}
         #
@@ -2495,7 +2496,7 @@ def create_entrances(self):
         # (, {}),
         # (, {}),
     ]
-
+    # Entrances to sub-areas that you could just walk back out of
     sub_area_coupled_entrances = [
         SMOEntranceData.top_hat_tower,
         SMOEntranceData.push_blocks,
@@ -2655,7 +2656,7 @@ def create_entrances(self):
         SMOEntranceData.snow_kingdom_shop,
         SMOEntranceData.luncheon_kingdom_shop,
         ]
-
+        # If the sub area is NOT just a dead end, and has an exit on the opposite side of the sub-area
     sub_area_unique_exits = [
         SMOEntranceData.top_hat_tower,
         SMOEntranceData.push_blocks,
