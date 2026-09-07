@@ -5,99 +5,13 @@ from rule_builder.options import OptionFilter
 from rule_builder.rules import And, CanReachLocation, CanReachRegion, Has, HasAny, HasFromList, HasGroup, Or, True_
 from worlds.SuperMarioOdysseyArchipelago.World.smo import SMOWorld
 from worlds.SuperMarioOdysseyArchipelago.World.smo.Options import CaptureSanity
-from .Data.RuleData import CanCapture, SMORuleCondition, SMORuleOperation, SMOKingdoms, cappy
+from .Data.RuleData import CanCapture, SMOKingdoms, cappy
 from .Data.EntranceData import SMOEntranceData
 from .Data.ItemData import SMOItemData
 from .Entrances import create_entrances, SMORandomizationGroup, SMOEntrance
-from .Locations import SMOLocation, loc_Cap, loc_Cascade, loc_Cascade_Revisit, \
-    loc_Sand, loc_Lake, loc_Wooded, loc_Cloud, loc_Lost, loc_Lost_Revisit, loc_Metro, \
-    loc_Snow, loc_Seaside, loc_Luncheon, loc_Ruined, loc_Bowser, loc_Moon, \
-    locations_table, post_game_locations_table, loc_Dark, loc_Darker, special_locations_table, \
-    loc_Cap_Shop, loc_Cascade_Shop, loc_Sand_Shop, loc_Lake_Shop, loc_Wooded_Shop, \
-    loc_Lost_Shop, loc_Metro_Shop, loc_Snow_Shop, loc_Seaside_Shop, loc_Luncheon_Shop, \
-    loc_Bowser_Shop, loc_Moon_Shop, loc_Mushroom_Shop, loc_Dark_Outfit, loc_Darker_Outfit, \
-    loc_Sand_Revisit, loc_Lake_Post_Seaside, loc_Wooded_Post_Metro, loc_Metro_Post_Sand, \
-    loc_Cascade_Post_Metro, loc_Cascade_Post_Snow, loc_Post_Cloud, loc_Moon_Post_Moon, \
-    loc_Luncheon_Post_Wooded, loc_Mushroom_Post_Luncheon, loc_Sand_Peace, loc_Wooded_Post_Story1, \
-    loc_Wooded_Peace, loc_Metro_Peace, loc_Snow_Peace, loc_Seaside_Peace, \
-    loc_Luncheon_Post_Spewart, loc_Luncheon_Post_Cheese_Rocks, loc_Luncheon_Peace, \
-    loc_Bowser_Infiltrate, loc_Bowser_Post_Bombing, loc_Bowser_Peace, loc_Postgame_Shop, loc_Sand_Pyramid, \
-    loc_Sand_Underground, loc_Bowser_Mecha_Broodal, loc_Cascade_Peace, loc_Moon_Outfit, loc_Night_Metro, \
-    loc_Mushroom, sub_area_frog, sub_area_poison_tide, sub_area_push_block, \
-    sub_area_rolling, sub_area_chain_chomp, sub_area_trex_nest, sub_area_cascade_2d, \
-    sub_area_gusty_bridges, sub_area_invisible_maze, sub_area_bullet_bill_maze, sub_area_jaxi, \
-    sub_area_strange_neighborhood, sub_area_sand_outfit, sub_area_sand_rumbling_floor, \
-    sub_area_sand_employee, sub_area_jaxi_ruins, sub_area_sand_sphinx, sub_area_sand_slots, sub_area_sand_underground, \
-    sub_area_sand_arena, sub_area_sand_arena_peace, sub_area_sand_arena_post, sub_area_transparent_platform, \
-    sub_area_colossal_ruins, sub_area_freezing_waterway, sub_area_repair, sub_area_zipper, sub_area_jump_grab_climb, \
-    sub_area_waves_poison, sub_area_woods_treasure_trap, sub_area_explorer, sub_area_flooding_pipe, \
-    sub_area_flower_road, sub_area_elevator_escalation, sub_area_wooded_fog, sub_area_wooded_clouds, \
-    sub_area_flower_field, sub_area_flower_field_peace, sub_area_nut_room, sub_area_wooded_invisible_road, \
-    sub_area_sheep, sub_area_wooded_breakdown_road, sub_area_cloud_picture, sub_area_cloud_picture_post, sub_area_cube, \
-    sub_area_jungle, sub_area_klepto, sub_area_metro_slots, sub_area_rc, sub_area_rc_post, sub_area_private_room, \
-    sub_area_city_hall, sub_area_crowd, sub_area_rewiring, sub_area_siege, sub_area_rotating_maze, sub_area_high_rise, \
-    sub_area_bullet_billding, sub_area_motor_scooter, sub_area_big_screen, sub_area_pitch_black, \
-    sub_area_swinging_scaffolding, sub_area_motor_daredevil, sub_area_crowd_post_game, sub_area_sewer, \
-    sub_area_sewer_post_game, sub_area_sandy_bottom, sub_area_seaside_waterway, sub_area_seaside_sphynx, \
-    sub_area_seaside_rumble, sub_area_resort, sub_area_cloud_sea, sub_area_valley, sub_area_seaside_stretch, \
-    sub_area_seaside_pokio, sub_area_seaside_maze, sub_area_icicle_post, sub_area_ice_wall_post, \
-    sub_area_gusty_barrier_post, \
-    sub_area_snowy_mountain_post, sub_area_magma_swamp, sub_area_veggies, sub_area_cook, sub_area_forks, \
-    sub_area_cheese, sub_area_lava_bubble, sub_area_spinning_athletics, sub_area_luncheon_story, \
-    sub_area_luncheon_slots, sub_area_gear_steps, sub_area_volcano_cave, sub_area_lava_islands, sub_area_roulette_tower, \
-    sub_area_ruined_charging, sub_area_samurai, sub_area_bowser_vault, sub_area_jizo_adventure, sub_area_spinning_tower, \
-    sub_area_hexagon_tower, sub_area_wooden_tower, sub_area_galaxy, sub_area_swings, sub_area_sphynx_moon, \
-    sub_area_mushroom_picture, sub_area_64, sub_area_castle, sub_area_mushroom_well, sub_area_yoshi_clouds, \
-    sub_area_rematch_tostarena, sub_area_rematch_steam_gardens, sub_area_rematch_bubblaine, sub_area_rematch_metro, \
-    sub_area_rematch_volbono, sub_area_rematch_crumbleden, sub_area_darker_invisible, sub_area_darker_breakdown, \
-    sub_area_darker_vanishing, sub_area_darker_yoshi_siege, sub_area_darker_yoshi_sinking, sub_area_darker_yoshi_magma, \
-    sub_area_inverted_pyramid, loc_odyssey_outfit, sub_area_mysterious_clouds, sub_area_moon_cave, sub_area_snow_outfit, \
-    sub_area_snow_koopa, sub_area_snow_dashing, sub_area_snow_freezing_water, sub_area_blowing, sub_area_snow_spinning, \
-    sub_area_snow_flower_road, sub_area_iceburn, sub_area_bowser_clouds, shop_wooded_coin, \
-    shop_lake_coin, shop_metro_coin, shop_seaside_coin, shop_luncheon_coin, shop_moon_coin, shop_post_game_coin, \
-    loc_Cap_Postgame, loc_Cascade_Postgame, loc_Sand_Postgame, loc_Wooded_Postgame, loc_Lake_Postgame, \
-    loc_Cloud_Postgame, loc_Lost_Postgame, loc_Metro_Postgame, loc_Seaside_Postgame, loc_Snow_Postgame, \
-    loc_Luncheon_Postgame, loc_Ruined_Postgame, loc_Bowser_Postgame, loc_Moon_Postgame, sub_area_church, \
-    sub_area_shiveria, sub_area_shiveria_peace, sub_area_snowline, loc_Night_Sand, loc_Sand_Pyramid_Peace, \
-    loc_Sand_Pyramid_Mural, \
-    cap_kingdom_regional_groups, cascade_kingdom_regional_groups, cascade_kingdom_peace_regional_groups, \
-    sand_kingdom_regional_groups, sand_kingdom_peace_regional_groups, sand_kingdom_pyramid_over_world_regional_groups, \
-    wooded_kingdom_regional_groups, lake_kingdom_regional_groups, lost_kingdom_regional_groups, \
-    metro_kingdom_regional_groups, night_metro_kingdom_regional_groups, seaside_kingdom_regional_groups, \
-    snow_kingdom_regional_groups, luncheon_kingdom_regional_groups, luncheon_kingdom_post_meat_regional_groups, \
-    bowsers_kingdom_regional_groups, bowsers_kingdom_peace_regional_groups, moon_kingdom_regional_groups, \
-    mushroom_kingdom_regional_groups, top_hat_tower_regional_groups, frog_pond_regional_groups, \
-    pushblocks_regional_groups, poison_tides_regional_groups, chasm_lifts_regional_groups, \
-    bullet_bill_maze_regional_groups, jaxi_ruins_regional_groups, strange_neighborhood_regional_groups, \
-    moeeye_invisible_maze_regional_groups, ice_cave_regional_groups, pyramid_upper_interior_regional_groups, \
-    underground_ruins_regional_groups, sky_garden_tower_regional_groups, flooded_pipes_regional_groups, \
-    deep_woods_regional_groups, walking_on_clouds_regional_groups, wooded_flower_road_regional_groups, \
-    sherm_elevator_regional_groups, bouncy_flowers_regional_groups, city_hall_regional_groups, \
-    sewers_regional_groups, bullet_billding_regional_groups, high_rise_regional_groups, \
-    trex_escape_regional_groups, sea_cave_regional_groups, shiveria_regional_groups, \
-    snowline_regional_groups, cascading_magma_regional_groups, magma_narrow_path_regional_groups, \
-    spinning_athletics_regional_groups, fork_flickin_regional_groups, moon_cave_regional_groups, \
-    peachs_castle_regional_groups, cap_kingdom_regional_coins, cascade_kingdom_regional_coins, \
-    cascade_kingdom_peace_regional_coins, sand_kingdom_regional_coins, sand_kingdom_peace_regional_coins, \
-    sand_kingdom_pyramid_over_world_regional_coins, wooded_kingdom_regional_coins, lake_kingdom_regional_coins, \
-    lost_kingdom_regional_coins, metro_kingdom_regional_coins, night_metro_kingdom_regional_coins, \
-    seaside_kingdom_regional_coins, snow_kingdom_regional_coins, luncheon_kingdom_regional_coins, \
-    luncheon_kingdom_post_meat_regional_coins, bowsers_kingdom_regional_coins, bowsers_kingdom_peace_regional_coins, \
-    moon_kingdom_regional_coins, mushroom_kingdom_regional_coins, top_hat_tower_regional_coins, \
-    frog_pond_regional_coins, pushblocks_regional_coins, poison_tides_regional_coins, \
-    chasm_lifts_regional_coins, bullet_bill_maze_regional_coins, jaxi_ruins_regional_coins, \
-    strange_neighborhood_regional_coins, moeeye_invisible_maze_regional_coins, ice_cave_regional_coins, \
-    pyramid_upper_interior_regional_coins, underground_ruins_regional_coins, sky_garden_tower_regional_coins, \
-    flooded_pipes_regional_coins, deep_woods_regional_coins, walking_on_clouds_regional_coins, \
-    wooded_flower_road_regional_coins, sherm_elevator_regional_coins, bouncy_flowers_regional_coins, \
-    city_hall_regional_coins, sewers_regional_coins, bullet_billding_regional_coins, \
-    high_rise_regional_coins, trex_escape_regional_coins, sea_cave_regional_coins, \
-    shiveria_regional_coins, snowline_regional_coins, cascading_magma_regional_coins, \
-    magma_narrow_path_regional_coins, spinning_athletics_regional_coins, fork_flickin_regional_coins, \
-    moon_cave_regional_coins, peachs_castle_regional_coins, sub_area_deep_woods, shop_cap_coin
+from .Locations import *
 from .Data.RegionData import SMORegion
 from .Data.LocationData import SMOLocationData
-from .Rules import create_access_rule
 from .Logic import count_moons, total_moons
 from entrance_rando import randomize_entrances, disconnect_entrance_for_randomization
 
@@ -398,9 +312,10 @@ def create_regions(self: SMOWorld):
     world_regions = [
         (SMORegion.menu, {}, self.options.goal.option_sand),
         (SMORegion.cap_kingdom_intro, {}, self.options.goal.option_sand),
-        (SMORegion.cap_kingdom_topper, {}, self.options.goal.option_sand),
+        (SMORegion.cap_kingdom_topper, loc_Topper, self.options.goal.option_sand),
         (SMORegion.cap_kingdom, loc_Cap, self.options.goal.option_sand),
         (SMORegion.cascade_kingdom, loc_Cascade, self.options.goal.option_sand),
+        (SMORegion.cascade_kingdom_upper, loc_Cascade_Upper, self.options.goal.option_sand),
         (SMORegion.cascade_kingdom_peace, loc_Cascade_Peace, self.options.goal.option_sand),
         (SMORegion.cascade_kingdom_revisit, loc_Cascade_Revisit, self.options.goal.option_sand),
         (SMORegion.sand_kingdom, loc_Sand, self.options.goal.option_sand),

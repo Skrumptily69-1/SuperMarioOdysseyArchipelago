@@ -9,37 +9,6 @@ from .LocationData import SMOLocationData as loc
 from ..Options import SMOOptions as opts, TrickJumpLogic, CaptureSanity
 from .RegionData import SMORegion
 
-
-# class SMORuleCondition(IntEnum):
-#     """
-#     Enumeration of Super Mario Odyssey access rule conditions.
-#     """
-#     REGION = 0
-#     ITEM = 1
-#     MOONS = 2
-#     TOTAL_MOONS = 3
-#     CAPTURE = 4
-#     REGIONAL_COINS = 5
-#     ENTRANCE = 6
-#     TRICK_EASY = 7
-#     TRICK_INTERMEDIATE= 8
-#     TRICK_HARD = 9
-#     GLITCH_EASY = 10
-#     GLITCH_INTERMEDIATE = 11
-#     GLITCH_HARD = 12
-#     ABILITY = 13
-#     LOCATION = 14
-#     PARENTHESIS_OPEN = 98
-#     PARENTHESIS_CLOSE = 99
-
-# class SMORuleOperation(IntEnum):
-#     NONE = -1
-#     AND = 0
-#     OR = 1
-#     PARENTHESIS_NONE = 2
-#     PARENTHESIS_AND = 3
-#     PARENTHESIS_OR = 4
-
 class SMOEntranceDataType(StrEnum):
     ENTER = "Entrance"
     EXIT = "End"
