@@ -22,18 +22,32 @@ loc_Cap = {
         SMOLocationData.frog_jumping_above_the_fog: 1019,
         SMOLocationData.frog_jumping_from_the_top_deck: 815,
         SMOLocationData.cap_kingdom_timer_challenge_1: 861,
-        SMOLocationData.good_evening_captain_toad: 227,
         # SMOLocationData.shopping_in_bonneton: 230,
+}
+
+loc_Topper = {
+    SMOLocationData.good_evening_captain_toad: 227,
 }
 
 
 loc_Cascade = {
-        SMOLocationData.our_first_power_moon: 205,
-        SMOLocationData.multi_moon_atop_the_falls: 218,
-        SMOLocationData.chomp_through_the_rocks: 206,
-        SMOLocationData.behind_the_waterfall: 212,
+    SMOLocationData.our_first_power_moon: 205,
+    SMOLocationData.chomp_through_the_rocks: 206,
+    SMOLocationData.behind_the_waterfall: 212,
+    SMOLocationData.on_top_of_the_rubble: 1145,
+    SMOLocationData.treasure_of_the_waterfall_basin: 216,
+    SMOLocationData.above_a_high_cliff: 210,
+    SMOLocationData.cascade_kingdom_timer_challenge_1: 669,
 }
 
+loc_Cascade_Upper = {
+    SMOLocationData.multi_moon_atop_the_falls: 218,
+    SMOLocationData.cascade_kingdom_timer_challenge_2: 670,
+    SMOLocationData.across_the_floating_isles: 208,
+    SMOLocationData.good_morning_captain_toad: 204,
+    SMOLocationData.caveman_cave_fan: 866,
+    SMOLocationData.peach_in_the_cascade_kingdom: 209,
+}
 
 loc_Cascade_Peace = {
         SMOLocationData.on_top_of_the_rubble: 1145,
@@ -198,7 +212,7 @@ loc_Wooded_Post_Story1 = {
 
 
 loc_Wooded_Peace = {
-        SMOLocationData.inside_the_rock_in_the_forest: 1026,
+        SMOLocationData.inside_a_rock_in_the_forest: 1026,
         SMOLocationData.hey_out_there_captain_toad: 133,
         SMOLocationData.wooded_kingdom_timer_challenge_1: 157,
         SMOLocationData.wooded_kingdom_timer_challenge_2: 676,

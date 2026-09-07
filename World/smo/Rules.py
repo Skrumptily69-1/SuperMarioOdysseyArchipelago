@@ -1,10 +1,13 @@
 from collections.abc import Callable
+import dataclasses
 from enum import IntEnum, StrEnum
 from typing import Any
 
-from BaseClasses import Location
+from BaseClasses import CollectionState, Location
+from rule_builder.field_resolvers import FieldResolver
+from rule_builder.options import OptionFilter
 from worlds.generic.Rules import set_rule, add_rule
-from rule_builder.rules import Rule
+from rule_builder.rules import Rule, TWorld, True_
 from . import SMOWorld, regional_coin_table, regional_coin_groups, regional_coin_groups_table
 from .Data.RegionData import SMORegion
 from .Data.ItemData import SMOItemData
@@ -14,8 +17,41 @@ from .Data.RuleData import SMORuleCondition, SMORuleOperation, SMOEntranceDataTy
     moon_rule_data
 from .Locations import shop_location_costs
 from .Items import capture_items
-from .Options import SMOOptions
+from .Options import CaptureSanity, SMOOptions
 from .Logic import total_moons, count_moons, count_regionals, can_complete_story
+
+"""Temporary until item_group_names from __init__.py is properly working"""
+cappy: list[str] = [SMOItemData.cap_throw, SMOItemData.up_throw, SMOItemData.down_throw, SMOItemData.spin_throw]
+@dataclasses.dataclass()
+class CanCapture(Rule[TWorld], game="Super Mario Odyssey"):
+    item_name: str | FieldResolver
+    """The capture to check for"""
+
+    @override
+    def _instantiate(self, world: TWorld) -> Rule.Resolved:
+        return (True_() if OptionFilter(CaptureSanity, 1).check(world.options) else self).Resolved(
+            resolve_field(self.item_name, world, str),
+            player=world.player,
+            caching_enabled=getattr(world, "rule_caching_enabled", False),
+        )
+
+    @override
+    def __str__(self) -> str:
+        options = f", options={self.options}" if self.options else ""
+        return f"{self.__class__.__name__}({self.item_name}{options})"
+
+    class Resolved(Rule.Resolved):
+        item_name: str
+
+        @override
+        def _evaluate(self, state: CollectionState) -> bool:
+            return (state.prog_items[self.player][self.item_name] >= 0
+                and state.has_any(cappy, self.player)
+                and state.can_reach_region(self.item_name, self.player))
+
+        @override
+        def item_dependencies(self) -> dict[str, set[int]]:
+            return {self.item_name: set()}
 
 def set_rules(self : SMOWorld) -> None:
     """ Sets the placement rules for Super Mario Odyssey.
