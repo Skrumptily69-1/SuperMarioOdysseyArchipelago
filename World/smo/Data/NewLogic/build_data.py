@@ -165,6 +165,7 @@ def main() -> int:
     token_data = read_csv(root / "logic_tokens.csv")
     node_data = read_csv(root / "logic_nodes.csv")
     connection_rows = read_csv(root / "route_edges.csv")
+    entrance_rows = read_csv(root / "entrance_links.csv")
     token_names: dict[str, str] = {
         "intermediate_tricks": "intermediate_tricks",
         "hard_tricks": "hard_tricks",
@@ -242,7 +243,7 @@ def main() -> int:
     output = ["class SMORegionData:", "region_names: dict[str, str] = {"]
 
     for name in region_names.values():
-        output.append(f"\"{name}\": {name.replace('_', ' ').title()}\",")
+        output.append(f"\"{name}\": \"{name.replace('_', ' ').title()}\",")
     output.append("}\n")
 
     output.append("region_moons: dict[str, dict[str, int]] = {")
@@ -305,6 +306,31 @@ def main() -> int:
     try:
         subprocess.run(
             ["ruff", "format", str(args.output / "ConnectionData.py")],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.stderr)
+
+    output = ["from .RegionData import SMORegionData as regions\n"]
+    output.append("\nentrance_data : dict[str, str] = {\n")
+    for entrance in entrance_rows:
+        node_ids = [region_names.get(entrance.get(column_id, ""), "") for column_id in ["home_in_node_id", "home_out_node_id", "sub_near_node_id", "sub_far_node_id"]]
+        entrance_ids = [entrance.get(column_id, "") for column_id in ["home_entrance_in", "home_entrance_out", "sub_entrance_in", "sub_entrance_out"]]
+
+        for i in range(len(node_ids)):
+
+            output.append(f'regions.region_names["{node_ids[i]}"]: "{entrance_ids[i]}",')
+    output[-1].replace(",", "")
+    output.append("}")
+
+    args.output.mkdir(parents=True, exist_ok=True)
+
+    (args.output / "EntranceData.py").write_text("".join(output), encoding="utf-8", newline="\n")
+    try:
+        subprocess.run(
+            ["ruff", "format", str(args.output / "EntranceData.py")],
             check=True,
             text=True,
             capture_output=True,
