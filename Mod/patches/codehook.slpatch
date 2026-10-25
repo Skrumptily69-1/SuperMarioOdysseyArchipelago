@@ -23,8 +23,15 @@ B59E28 B seadPrintHook // sead::system::print
 // HakoniwaStateDemoOpening::exeLoad(HakoniwaStateDemoOpening *this)
 512ae8 BL onNewGameDemoStart
 
+// HakoniwaSequence::init(HakoniwaSequence *this,SequenceInitInfo *param_1)
+//50ef40 BL onNewGameDemoStart
+
+
+
 // WorldHeap
 5145c8 CMP W20, 500
+
+514710 RET
 
 50E89C BL constructHook // HakoniwaSequence::init+1F4
 50EF2C: // HakoniwaSequence::init+884
@@ -88,6 +95,8 @@ B59E28 B seadPrintHook // sead::system::print
 
 // CoinCollect::exeGot
 1C043C BL sendCollectPacket
+
+//
 
 // CoinCollect2D::exeCountUp
 //1C0560 BL sendCollectPacket
@@ -212,6 +221,10 @@ B59E28 B seadPrintHook // sead::system::print
 
 // FUN_71003126ec(LiveActor *param_1)
 312734 BL getUnlockShineNumByWorldId
+
+// Unlock Count Reached Cappy Notification
+// StageScene::exePlay(StageScene *this)
+4cd80c BL showHasUnlockShineNumCapMessage
 
 // GameDataFunction::calcWorldNumForShineList(LayoutActor *param_1)
 52b154 MOV X0, #17

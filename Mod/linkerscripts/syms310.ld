@@ -179892,3 +179892,5 @@ _ZN24HakoniwaStateDemoOpening7exeLoadEv = 0x512AA8 - 0x512BB8
 _ZN16GameDataFunction24calcWorldNumForShineListEPKN2al11LayoutActorE = 0x52B128 - 0x52B160
 FUN_7100206d78 = 0x206D78 - 0x206E1C
 _ZN14HackListLayout19updateHackPartsDataEv = 0x1EC648 - 0x1ECA68
+_ZN10StageScene7exePlayEv = 0x4CD7B8 - 0x4CDDA8
+_ZN19WorldResourceLoader24requestLoadWorldResourceEi = 0x514710 - 0x514754

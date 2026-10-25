@@ -100,8 +100,8 @@ Client::Client() {
 void Client::init(al::LayoutInitInfo const &initInfo, GameDataHolderAccessor holder) {
 
     mConnectStatus = new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
-    al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Server.", 0);
-    al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Server.", 0);
+    al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Client.", 0);
+    al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Client.", 0);
 
     mUIMessage = new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
     mUIMessage->setTxtMessage(u"a");
@@ -155,7 +155,7 @@ bool Client::startConnection() {
         mKeyboard->setHeaderText(u"Save File does not contain a port!");
         mKeyboard->setSubText(u"Please set a Server Port Below.");
         mServerPort = 1027;
-        Client::openKeyboardPort();
+        //Client::openKeyboardPort();
         isNeedSave = true;
     }
 
@@ -1460,6 +1460,10 @@ void Client::receiveCheck(Check* packet)
         accessor.mData->mGameDataFile->buyItem(infoPtr, false);
         break;
 
+    case 4:
+        al::PlacementId placementId(packet->objId, nullptr, nullptr);
+        accessor.mData->mGameDataFile->customAddCoinCollect( placementId, packet->amount, packet->stage);
+
     case 5:
         addCapture(captureListNames[packet->locationId]);
         GameDataFunction::addHackDictionary(accessor, captureListNames[packet->locationId]);
@@ -1596,14 +1600,24 @@ void Client::addShine(int uid)
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
     int shines = sInstance->collectedShines[uid / 32];
 
     int index = (uid / 32) * 32;
     int i = 1;
-    while (i > 0) {
+    while (i <= 0x80000000) {
         if (index == uid) {
             shines = shines | i;
+            break;
+        }
+        if (i == 0x80000000)
+        {
+            sead::FixedSafeString<60> str;
+            str = "";
+            str.append("Shine UID ");
+            str.append(intToCstr(uid));
+            str.append(" failed to add to shine list at index ");
+            str.append(intToCstr(index));
+            setMessage(2, str.cstr());
             break;
         }
         i = i << 1;
@@ -1634,10 +1648,21 @@ bool Client::hasShine(int uid)
 
     int index = (uid / 32) * 32;
     int i = 1;
-    while (i > 0) {
+    while (i <= 0x80000000) {
         if (index == uid) {
             shines = shines & i;
             return (shines == i);
+        }
+        if (i == 0x80000000)
+        {
+            sead::FixedSafeString<60> str;
+            str = "";
+            str.append("Shine UID ");
+            str.append(intToCstr(uid));
+            str.append(" failed to find in shine list at index ");
+            str.append(intToCstr(index));
+            setMessage(3, str.cstr());
+            break;
         }
         i = i << 1;
         index += 1;

@@ -148,6 +148,26 @@ int getIndexMoonItemList(const char *moonItem) {
     return -1;
 }
 
+int getIndexStageIdList(const char *stageId) {
+    for (size_t i = 0; i < sizeof(changeStageIdList) / sizeof(changeStageIdList[0]); i++)
+    {
+        if (al::isEqualString(changeStageIdList[i], stageId)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int getIndexStageNameList(const char *stangeName) {
+    for (size_t i = 0; i < sizeof(changeStageNameList) / sizeof(changeStageNameList[0]); i++)
+    {
+        if (al::isEqualString(changeStageNameList[i], stangeName)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 const char *tryGetPuppetCapName(PuppetInfo *info) {
     if(info->costumeHead && isInCostumeList(info->costumeHead)) {
         return info->costumeHead;

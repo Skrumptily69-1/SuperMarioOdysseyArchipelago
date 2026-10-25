@@ -30,6 +30,7 @@
 #include "al/layout/IUseLayout.h"
 #include "debugMenu.hpp"
 #include "game/GameData/GameDataFunction.h"
+#include "game/GameData/GameProgressData.h"
 #include "game/HakoniwaSequence/HakoniwaSequence.h"
 #include "game/Player/PlayerFunction.h"
 #include "game/StageScene/StageScene.h"
@@ -44,6 +45,7 @@
 #include "sead/prim/seadSafeString.hpp"
 #include "game/Demo/DemoStateHackFirst.h"
 #include "game/Actors/GrowFlowerPot.h"
+#include "game/SceneObjs/CapMessageMoonNotifier.h"
 
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
@@ -447,7 +449,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport,
 bool isGrabShine(GameDataHolderAccessor accessor, int shineIdx) {
     GameDataFile::HintInfo* curHintInfo =
         &accessor.mData->mGameDataFile->mShineHintList[shineIdx];
-    if (!curHintInfo->mIsGrand || (curHintInfo->mUniqueID == 159 && Client::getScenario(3) < 3)) {
+    if (!curHintInfo->mIsGrand) {
         if (curHintInfo->mUniqueID == 205 && Client::getScenario(1) > 1 ||
             curHintInfo->mUniqueID == 129)
         {
@@ -579,6 +581,13 @@ void sendShinePacket(GameDataHolderAccessor thisPtr, Shine* curShine) {
     }
     // Add some way to sync shinechecks grabbed before connecting, probably handle on connect or something
     Client::addShine(curHintInfo->mUniqueID);
+    if (curHintInfo->mUniqueID == 107)
+    {
+        ChangeStageInfo info =
+            ChangeStageInfo(thisPtr.mData, "", "CityWorldHomeStage", false, 3,
+                            static_cast<ChangeStageInfo::SubScenarioType>(0));
+        GameDataFunction::tryChangeNextStage(thisPtr, &info);
+    }
 }
 
 void sendItemPacket(GameDataFile thisPtr, ShopItem::ItemInfo* info, bool flag) {
@@ -609,7 +618,7 @@ void sendCollectPacket(GameDataHolderAccessor thisPtr, al::PlacementId* placemen
 {
     if (Client::getRegionalsFlag())
     {
-        sead::FixedSafeString<0x20> placementString;
+        sead::FixedSafeString<0x80> placementString;
         placementId->makeString(&placementString);
         Client::sendCheckPacket(4, placementString.cstr(), GameDataFunction::getCurrentStageName(thisPtr));
     }
@@ -664,6 +673,23 @@ int getUnlockShineNumByGameDataFile(GameDataFile* file, bool* unkBool)
 int getUnlockShineNumByWorldId(bool* unkBool, GameDataHolder* thisPtr, int worldId)
 {
     return getUnlockShineNum(thisPtr, unkBool, worldId);
+}
+
+bool showHasUnlockShineNumCapMessage(al::IUseSceneObjHolder* sceneObjHolder)
+{
+    GameDataHolderAccessor accessor = GameDataHolderAccessor(sceneObjHolder);
+    if (GameDataFunction::getGotShineNum(accessor, -1) >= Client::getWorldUnlockCount(GameDataFunction::getCurrentWorldId(accessor)))
+    {
+        if (al::isExistSceneObj(sceneObjHolder, 5)) {
+            CapMessageMoonNotifier* notifier = (CapMessageMoonNotifier*)al::getSceneObj(sceneObjHolder, 5); 
+            /*notifier->unlockShineNum =
+                Client::getWorldUnlockCount(GameDataFunction::getCurrentWorldId(accessor));*/
+            Client::setMessage(1, "Has Enough Moons for notification.")
+            return notifier->tryShowCapMessageMoonNotify();
+        }
+        return false;
+    }
+    return false;
 }
 
 void onGrandShineStageChange(GameDataHolderWriter holder, ChangeStageInfo const* stageInfo) 
@@ -857,12 +883,42 @@ void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementI
     int worldScenario =
         GameDataFunction::getWorldScenarioNo(info->mActorSceneInfo.mSceneObjHolder, worldId);
 
-    // Enable Cappy on load into Cap Intro
-    if (worldId == 0 && worldScenario < 2 && !GameDataFunction::isEnableCap(accessor))
+    // Guarantee Lake and Snow selection
+    if (accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusFirstBranch != GameProgressData::FirstBranch::None)
+    {
+        if (accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusFirstBranch !=
+            GameProgressData::FirstBranch::Lake)
+        {
+            accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusFirstBranch =
+                GameProgressData::FirstBranch::Lake;
+        }
+    }
+
+    if (accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusSecondBranch != GameProgressData::SecondBranch::None)
+    {
+        if (accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusSecondBranch !=
+            GameProgressData::SecondBranch::Snow)
+        {
+            accessor.mData->mGameDataFile->mGameProgressData->mUnlockWorldStatusSecondBranch =
+                GameProgressData::SecondBranch::Snow;
+        }
+    }
+
+    // Fix possible wooded softlock not sure if needed
+    //if (worldId == 3 && worldScenario == 2 && Client::hasCapture("Senobi") &&
+    //    Client::hasShine(159)) {
+    //    ChangeStageInfo info = ChangeStageInfo(accessor.mData, "", "ForestWorldBossStage", false, 2,
+    //                                           static_cast<ChangeStageInfo::SubScenarioType>(0));
+    //    GameDataFunction::tryChangeNextStage(accessor, &info);
+    //}
+
+    // Enable Cappy on load into Cap Intro (Soft Locks)
+    /*if (worldId == 0 && worldScenario < 2 && !GameDataFunction::isEnableCap(accessor))
     {
 		__asm("MOVZ W0, #0"); // Skips the laying down anim, stopping a softlock on new game (Anim is called: DemoOpeningDown)
         GameDataFunction::enableCap(accessor);
-    }
+        GameDataFunction::restartStage(accessor);
+    }*/
 
     if (worldScenario > Client::getScenario(worldId))
     {
@@ -989,6 +1045,17 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 isDisableMusic = !isDisableMusic;
             }
         }
+    } else if (al::isPadHoldR(-1)) {
+
+        // Purple Coin Search
+        if (al::isPadHoldRight(-1)) {
+        
+        }
+
+        // Return to Odyssey
+        if (al::isPadHoldLeft(-1)) {
+        }
+    
     }
 
     if (isDisableMusic) {

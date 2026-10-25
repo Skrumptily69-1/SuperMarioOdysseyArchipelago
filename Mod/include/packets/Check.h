@@ -7,7 +7,7 @@ struct PACKED Check : Packet {
     int locationId = -1;
     int itemType = -1;
     int index = -1;
-    char objId[0x10] = {};
+    char objId[0x80] = {};
     char stage[0x30] = {};
     int amount = -1;
 };

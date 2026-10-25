@@ -352,6 +352,24 @@ class Client {
         int numApSlots = 0;
         int numApItems = 0;
 
+        // Loading Zone Replacement
+        // 378 one for each StageId
+        // May need more for alternate loading zones in sub areas that don't use a unique
+        // stage id like forks exit
+        // Flag for if Entrance Randomization is active
+        // stageConnections are indexed by stageId
+        bool isER = false;
+        // Overworld connections
+        sead::SafeArray<stageConnection, 378> overworldStageConnections;
+        // Sub area connections
+        sead::SafeArray<stageConnection, 378> subAreaStageConnections;
+
+        // Regional Coin Finder
+
+
+        // Esacape to last trasition or Odyssey
+
+
         // Backups for our last player/game packets, used for example to re-send them for newly connected clients
         PlayerInf lastPlayerInfPacket = PlayerInf();
         GameInf lastGameInfPacket = GameInf();

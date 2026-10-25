@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Toggle, Choice, FreeText, PerGameCommonOptions, DeathLink
+from Options import Toggle, Choice, FreeText, Range, PerGameCommonOptions, DeathLink, NamedRange
 
 
 class Goal(Choice):
@@ -24,6 +24,12 @@ class StorySanity(Choice):
     option_all = 3
     option_off = 0
     default = 0 # default to off
+
+class MoonRocks(Toggle):
+    """Adds Moon Rocks to the pool.
+    This option is ignored for goals that do not include post game
+    unless Entrance Randomization is enabled."""
+    display_name = "Randomize Moon Rocks"
 
 class ShopSanity(Choice):
     """Adds various shop items to the pool.
@@ -79,24 +85,33 @@ class CaptureSanity(Toggle):
     display_name = "Randomize Captures"
     #visibility = 0b1101
 
-class ExtraMoons(Choice):
+class ExtraMoons(NamedRange):
     """
     Sets the multiplier for the number of extra moons available in the pool for each kingdom.
     Default: some = 1.2x moons
     """
-    display_name = "Extra Moons"
-    option_none = 1.0
-    option_some = 1.2
-    option_more = 1.5
-    option_many = 1.75
-    option_double = 2.0
+    range_start = 100
+    range_end = 1000
+    special_range_names = {
+        "none": 100,
+        "some": 120,
+        "more": 150,
+        "many": 175,
+        "double": 200,
+    }
 
-    default = 1.2  # default to some
+    display_name = "Extra Moons"
+
+
+    default = 120  # default to some
 
 class TrickJumpLogic(Choice):
     """
-        Difficulty of trick jumps considered as in logic.
+        Difficulty of trick jumps and skips considered as in logic.
+
     """
+    display_name = "Trick Jump and Skip Logic"
+
     option_off = 0
     option_easy = 1
     option_intermediate = 2
@@ -104,10 +119,13 @@ class TrickJumpLogic(Choice):
 
     default = 0  # default to off
 
-class MiscTrickLogic(Choice):
+class GlitchLogic(Choice):
     """
         Difficulty of clips and glitches considered as in logic.
     """
+
+    display_name = "Glitch and Clip Logic"
+
     option_off = 0
     option_easy = 1
     option_intermediate = 2
@@ -118,15 +136,53 @@ class MiscTrickLogic(Choice):
 class SMODeathLink(DeathLink):
     __doc__ = DeathLink.__doc__ + "\n    In Super Mario Odyssey, Mario dying in any way sends a death and receiving a death causes Mario to die where he stands."
 
+class SMORegionalCoinSanity(Choice):
+    """
+        Add Regional Coins to the pool.
+        groups: Each group of regional coins is a check.
+        individual: Each regional coin is a check.
+    """
+    option_off = 0
+    option_groups = 1
+    option_individual = 2
+
+    default = 0
+    display_name = "Randomize Regional Coins"
+
+class SMOAbilityRando(Toggle):
+    """
+        Add Abilities to the pool.
+        This includes all of Mario's default movement options.
+    """
+
+    display_name = "Randomize Abilities"
+
+class SMOEntranceRando(Choice):
+    """
+        Randomizes Sub-Area Loading Zones
+        Shuffle: shuffles sub-area entrances among themselves
+        Chaos: sub-area entrances and exits no longer lead to the same place
+         and are randomized separately.
+    """
+    option_off = 0
+    option_shuffle = 1
+    option_chaos = 2
+
+
 @dataclass
 class SMOOptions(PerGameCommonOptions):
     goal: Goal
     story : StorySanity
+    regional_coins : SMORegionalCoinSanity
+    trick_logic : TrickJumpLogic
+    glitch_logic : GlitchLogic
     extra_moons : ExtraMoons
     shop_sanity : ShopSanity
     # replace: ReplaceUnneededMoons
     colors : RandomizeMoonColors
     counts : RandomizeMoonCount
     capture_sanity : CaptureSanity
+    ability_sanity : SMOAbilityRando
+    entrance_randomization : SMOEntranceRando
     death_link : SMODeathLink
 

@@ -59,6 +59,9 @@ public:
 
     static s32 getCurrentShineNum(GameDataHolderAccessor);
 
+    // gets the number of collected moons in a kingdom
+    static s32 getGotShineNum(GameDataHolderAccessor, int);
+
     // gets total moons collected on a specified save file (-1 for current save)
     static s32 getTotalShineNum(GameDataHolderAccessor, int);
 

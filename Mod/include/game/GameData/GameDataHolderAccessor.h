@@ -10,6 +10,7 @@
 
 // declaring this here because slappin it into util.hpp causes circular dependency issues
 namespace al {
+    bool isExistSceneObj(al::IUseSceneObjHolder const* holder, int index);
     al::ISceneObj *getSceneObj(al::IUseSceneObjHolder const *holder, int index);
 }
 

@@ -96,6 +96,8 @@ namespace rs {
     const char* getStageShineEmptyArchiveName(al::LiveActor const*, char const*);
     void createSaveObjInfoWriteSaveData(al::ActorInitInfo const&);
 
+    bool requestShowCapMessageGetMoon(al::IUseSceneObjHolder const*);
+
     void addGrowFlowerGrowLevel(al::LiveActor const*, al::PlacementId const*, unsigned int);
     void setGrowFlowerTime(al::LiveActor const*, al::PlacementId const*, unsigned long);
    }

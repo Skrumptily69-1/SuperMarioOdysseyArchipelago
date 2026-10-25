@@ -1,6 +1,5 @@
 from enum import Enum
 from ctypes import c_short as short, c_ushort as ushort, c_byte as sbyte, c_ubyte as byte, c_byte, c_ubyte
-from math import trunc
 from typing import Any
 
 class PacketType(Enum):
@@ -13,18 +12,20 @@ class PacketType(Enum):
     Connect : short = 6
     Disconnect : short = 7
     CostumeInfo : short = 8
-    Check : short = 9
     CaptureInfo : short = 10
     ChangeStage : short = 11
     Command : short = 12
     ArchipelagoChat : short = 13
-    SlotData : short = 14
-    DeathLink : short = 16
-    ShineChecks : short = 17
-    ApInfo : short = 18
-    ShopReplace : short = 19
-    ShineReplace : short = 20
-    ShineColor : short = 21
+    SlotData : short = 20
+    UnlockWorld : short = 21
+    Check : short = 22
+    DeathLink : short = 23
+    SentChecks : short = 24
+    ApInfo : short = 25
+    ShopReplace : short = 26
+    ShineReplace : short = 27
+    ShineColor : short = 28
+    ArchipelagoConnect : short = 29
     #UDPInit : short = 26
     #HolePunch : short = 27
 
@@ -33,6 +34,15 @@ class ConnectionType(Enum):
     Reconnect = 1
 
 class ItemType(Enum):
+    SentCheck = -11
+    ShopMoonScout = -10
+    MoonRockScout = -9
+    StickerScout = -8
+    SouvenirScout = -7
+    CapScout = -6
+    ClothesScout = -5
+    LifeUpHeart = -4
+    LifeHeart = -3
     Coins = -2
     Moon = -1
     Clothes = 0
@@ -41,13 +51,42 @@ class ItemType(Enum):
     Sticker = 3
     RegionalCoin = 4
     Capture = 5
+    MoonRock = 6
+    HealthUpgrade = 7
+    WalletUpgrade = 8
 
+class CappyMessageType(Enum):
+    Connect = 0
+    Moon = 1
+    MultiMoon = 2
+    RegionalCoin = 3
+    Cap = 4
+    Clothes = 5
+    Sticker = 6
+    Souvenir = 7
+    Capture = 8
+    MoonRock = 9
+    HealthUpgrade = 10
+    WalletUpgrade = 11
+    Coins = 12
+
+class ApInfoType(Enum):
+    Games = 0
+    Players = 1
+    Items = 2
+
+
+class MessageType(Enum):
+    Chat = 0
+    System = 1
+    Private = 2
 
 #region Check Packets
 
 class CheckPacket:
-    OBJ_ID_SIZE = 0x10
+    OBJ_ID_SIZE = 0x40
     STAGE_NAME_SIZE = 0x30
+    SENDER_NAME_SIZE = 0x40
     location_id : int
     # Shop Items
     item_type : ItemType
@@ -59,9 +98,12 @@ class CheckPacket:
     stage : str
     # Coins
     amount : int
-    SIZE : short = 16 + 0x10 + 0x30
+    sender_name : str
 
-    def __init__(self, packet_bytes : bytearray = None, location_id : int = None, item_type : int = None, index : int = None, obj_id : str = None, stage : str = None, amount : int = None):
+
+    SIZE : short = 16 + OBJ_ID_SIZE + STAGE_NAME_SIZE + SENDER_NAME_SIZE
+
+    def __init__(self, packet_bytes : bytearray = None, location_id : int = None, item_type : int = None, index : int = None, obj_id : str = None, stage : str = None, amount : int = None, sender_name : str = None):
         if packet_bytes:
             self.deserialize(packet_bytes)
         else:
@@ -71,6 +113,7 @@ class CheckPacket:
             self.obj_id = obj_id
             self.stage = stage
             self.amount = amount
+            self.sender_name = sender_name
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
@@ -84,6 +127,9 @@ class CheckPacket:
         while len(data) < 12 + self.OBJ_ID_SIZE + self.STAGE_NAME_SIZE:
             data += b"\x00"
         data += self.amount.to_bytes(4, "little", signed=True)
+        data += self.sender_name.encode()
+        while len(data) < 16 + self.OBJ_ID_SIZE + self.STAGE_NAME_SIZE + self.SENDER_NAME_SIZE:
+            data += b"\x00"
         if len(data) != self.SIZE:
             raise f"CheckPacket failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
@@ -104,20 +150,36 @@ class CheckPacket:
         offset += self.STAGE_NAME_SIZE
         self.amount  = int.from_bytes(data[offset:offset + 4], "little")
         offset += 4
+        self.sender_name = data[offset:offset + self.SENDER_NAME_SIZE].decode()
+        offset += self.SENDER_NAME_SIZE
+        count = 0
+        for char in self.obj_id:
+            count += 1 if char != '\0' else 0
+        self.obj_id = self.obj_id[0:count]
+        count = 0
+        for char in self.stage:
+            count += 1 if char != '\0' else 0
+        self.stage = self.stage[0:count]
+        count = 0
+        for char in self.sender_name:
+            count += 1 if char != '\0' else 0
+        self.sender_name = self.sender_name[0:count]
 
-
-class ShineChecksPacket:
+class SentChecksPacket:
+    check_type: ItemType
     checks : list[int]
-    SIZE : short = 200
+    SIZE : short = 202
 
-    def __init__(self, packet_bytes : bytearray = None, checks : list[int] = None):
+    def __init__(self, packet_bytes : bytearray = None, check_type : ItemType = None, checks : list[int] = None):
         if packet_bytes:
             self.deserialize(packet_bytes)
         else:
+            self.check_type = check_type
             self.checks = checks
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
+        data += self.check_type.value.to_bytes(length=2, byteorder="little", signed=True)
         for i in range(100):
             if i < len(self.checks):
                 data += self.checks[i].to_bytes(length=2, byteorder="little", signed=True)
@@ -128,7 +190,7 @@ class ShineChecksPacket:
 
 
         if len(data) != self.SIZE:
-            raise f"ShineChecksPacket failed to serialize. bytearray is incorrect size {self.SIZE}."
+            raise f"SentChecksPacket failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
 
     def deserialize(self, data : bytes | bytearray) -> None:
@@ -140,29 +202,43 @@ class ShineChecksPacket:
 
 #region Server Packets
 
+# ADD MessageType and GUID to __init__
 class ChatMessagePacket:
     MESSAGE_SIZE : int = 0x4B
-    messages : list[str]
-    SIZE : short = 0x4B * 3
+    GUID_SIZE : int = 16
+    other_guid : bytearray
+    message_type : MessageType
+    message : str
+    SIZE : short = MESSAGE_SIZE + 4 + GUID_SIZE
 
-    def __init__(self, packet_bytes : bytearray = None, messages : list[str] = None):
+    def __init__(self, packet_bytes : bytearray = None, guid : bytearray = None, message_type : MessageType = None, message : str = None):
         if packet_bytes:
             self.deserialize(packet_bytes)
         else:
-            self.messages = messages
+            self.other_guid = guid
+            self.message_type = message_type
+            self.message = message
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
         size : int = 0
-        for index in range(len(self.messages)):
-            for char in self.messages[index]:
-                if size < self.MESSAGE_SIZE:
-                    data += char.encode()
-                else:
-                    raise "Message too long exception"
+        #data += self.other_guid
 
-            while len(data) < self.MESSAGE_SIZE * (index + 1):
-                data += b"\x00"
+        while len(data) < self.GUID_SIZE:
+            data += b"\x00"
+
+        data += self.message_type.value.to_bytes(4, "little")
+
+        for char in self.message:
+            if size < self.MESSAGE_SIZE:
+                data += char.encode()
+                size += 1
+            else:
+                raise "Message too long exception"
+
+        while len(data) < self.SIZE:
+            data += b"\x00"
+            size += 1
         if len(data) != self.SIZE:
             raise f"ChatMessagePacket failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
@@ -173,81 +249,78 @@ class ChatMessagePacket:
             data = bytearray(data)
 
         offset = 0
-        self.messages.append(data[offset:offset + self.MESSAGE_SIZE].decode("utf8"))
+        self.other_guid = data[offset:offset + self.GUID_SIZE]
+        offset += self.GUID_SIZE
+        self.message_type =  MessageType(int.from_bytes(data[offset:offset + 4], "little"))
+        self.message = data[offset:offset + self.MESSAGE_SIZE].decode("utf8")
         offset += self.MESSAGE_SIZE
-        self.messages.append(data[offset:offset + self.MESSAGE_SIZE].decode("utf8"))
-        offset += self.MESSAGE_SIZE
-        self.messages.append(data[offset:offset + self.MESSAGE_SIZE].decode("utf8"))
+        self.message = self.message.strip()
 
 
 class SlotDataPacket:
-    cascade : ushort
-    sand : ushort
-    wooded : ushort
-    lake : ushort
-    lost : ushort
-    metro : ushort
-    seaside : ushort
-    snow : ushort
-    luncheon : ushort
-    ruined : ushort
-    bowser : ushort
-    dark : ushort
-    darker : ushort
+    cascade : int
+    sand : int
+    wooded : int
+    lake : int
+    lost : int
+    metro : int
+    seaside : int
+    snow : int
+    luncheon : int
+    ruined : int
+    bowser : int
+    dark : int
+    darker : int
+    goal : int
     regionals : bool
     captures : bool
-    SIZE : short = 28
+    entrance_randomization : bool
+    SIZE : short = 30
 
-    def __init__(self, packet_bytes : bytearray = None, cascade : int = None, sand : int = None, wooded : int = None, lake : int = None, lost : int = None, metro : int = None, seaside : int = None, snow : int = None, luncheon : int = None, ruined : int = None, bowser : int = None, dark : int = None, darker : int = None,  regionals : bool = None, captures : bool = None):
+    def __init__(self, packet_bytes : bytearray = None, cascade : int = None, sand : int = None, wooded : int = None,
+                 lake : int = None, lost : int = None, metro : int = None, seaside : int = None, snow : int = None,
+                 luncheon : int = None, ruined : int = None, bowser : int = None, dark : int = None, darker : int = None,
+                 goal: int = None, regionals : bool = None, captures : bool = None, entrance_randomization : bool = None):
         if packet_bytes:
             self.deserialize(packet_bytes)
         else:
-            self.cascade = short(cascade)
-            self.sand = short(sand)
-            self.wooded = short(wooded)
-            self.lake = short(lake)
-            self.lost = short(lost)
-            self.metro = short(metro)
-            self.seaside = short(seaside)
-            self.snow = short(snow)
-            self.luncheon = short(luncheon)
-            self.ruined = short(ruined)
-            self.bowser = short(bowser)
-            self.dark = short(dark)
-            self.darker = short(darker)
+            self.cascade = cascade
+            self.sand = sand
+            self.wooded = wooded
+            self.lake = lake
+            self.lost = lost
+            self.metro = metro
+            self.seaside = seaside
+            self.snow = snow
+            self.luncheon = luncheon
+            self.ruined = ruined
+            self.bowser = bowser
+            self.dark = dark
+            self.darker = darker
+            self.goal = goal
             self.regionals = regionals
             self.captures = captures
+            self.entrance_randomization = entrance_randomization
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
-        int_value : int = self.cascade.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.sand.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.wooded.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.lake.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.lost.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.metro.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.seaside.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.snow.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.luncheon.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.ruined.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.bowser.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.dark.value
-        data += int_value.to_bytes(2, "little")
-        int_value = self.darker.value
-        data += int_value.to_bytes(2, "little")
+        data += self.cascade.to_bytes(2, "little")
+        data += self.sand.to_bytes(2, "little")
+        data += self.wooded.to_bytes(2, "little")
+        data += self.lake.to_bytes(2, "little")
+        data += self.lost.to_bytes(2, "little")
+        data += self.metro.to_bytes(2, "little")
+        data += self.seaside.to_bytes(2, "little")
+        data += self.snow.to_bytes(2, "little")
+        data += self.luncheon.to_bytes(2, "little")
+        data += self.ruined.to_bytes(2, "little")
+        data += self.bowser.to_bytes(2, "little")
+        data += self.dark.to_bytes(2, "little")
+        data += self.darker.to_bytes(2, "little")
+        data += self.goal.to_bytes(1, "little")
         data += self.regionals.to_bytes(1, "little")
         data += self.captures.to_bytes(1, "little")
+        data += self.entrance_randomization.to_bytes(1, "little")
         if len(data) != self.SIZE:
             raise f"CountsPacket failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
@@ -256,35 +329,39 @@ class SlotDataPacket:
         if data is bytes:
             data = bytearray(data)
         offset = 0
-        self.cascade = ushort(int.from_bytes(data[offset:2], "little"))
+        self.cascade = int.from_bytes(data[offset:2], "little")
         offset += 2
-        self.sand = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.sand = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.wooded = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.wooded = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.lake = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.lake = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.lost = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.lost = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.metro = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.metro = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.seaside = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.seaside = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.snow = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.snow = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.luncheon = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.luncheon = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.ruined = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.ruined = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.bowser = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.bowser = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.dark = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.dark = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
-        self.darker = ushort(int.from_bytes(data[offset:offset + 2], "little"))
+        self.darker = int.from_bytes(data[offset:offset + 2], "little")
         offset += 2
+        self.goal = int.from_bytes(data[offset:offset + 1], "little")
+        offset += 1
         self.regionals = bool.from_bytes(data[offset:offset + 1], "little")
         offset += 1
         self.captures = bool.from_bytes(data[offset:offset + 1], "little")
+        offset += 1
+        self.entrance_randomization = bool.from_bytes(data[offset:offset + 1], "little")
 
 
 
@@ -299,7 +376,7 @@ class ChangeStagePacket:
     stage_id : str
     scenario : sbyte
     sub_scenario_type : byte
-    SIZE : short = 0x42
+    SIZE : int = 0x42
 
     def __init__(self, packet_bytes = None , stage : str = "", stage_id : str = "", scenario : int = -1, sub_scenario_type : int = 0):
         if packet_bytes:
@@ -339,14 +416,14 @@ class ChangeStagePacket:
         self.sub_scenario_type = byte(int.from_bytes(data[offset:offset + 1], "little"))
 
 class ApInfoPacket:
-    INFO_SIZE : int = 40
+    INFO_SIZE : int = 64
     info_type : int = -1
     index1 : int = -1
     index2 : int = -1
     index3 : int = -1
     info : list[str] = []
 
-    SIZE : short = 128
+    SIZE : short = INFO_SIZE * 3 + 8
 
     def __init__(self, info_type: int, index1 : int, index2 : int, index3 : int, info : list[str]):
         self.info_type = info_type
@@ -369,8 +446,8 @@ class ApInfoPacket:
 
         for i in range(3):
             if i < len(self.info):
-                if len(self.info[i]) > 40:
-                    data += self.info[i][:40].encode()
+                if len(self.info[i]) > self.INFO_SIZE:
+                    data += self.info[i][:self.INFO_SIZE].encode()
                 else:
                     data += self.info[i].encode()
 
@@ -413,17 +490,13 @@ class ShopReplace:
         data : bytearray = bytearray()
         data += self.info_type.to_bytes(1,"little", signed=False)
 
-        for i in range(44):
-            if i < len(self.info):
-                for value in self.info[i]:
-                    data += value.to_bytes(1,"little", signed=False)
+        for vals in self.info:
+            for value in vals:
+                data += value.to_bytes(1,"little", signed=False)
 
-            else:
-                filler = 255
-                data += filler.to_bytes(1,"little", signed=False)
-                data += filler.to_bytes(1,"little", signed=False)
-                data += filler.to_bytes(1,"little", signed=False)
-                data += filler.to_bytes(1,"little", signed=False)
+        while len(data) < self.SIZE:
+            filler = 255
+            data += filler.to_bytes(1, "little", signed=False)
 
         if len(data) != self.SIZE:
             raise f"ShopReplace failed to serialize. bytearray is incorrect size {self.SIZE}."
@@ -452,7 +525,7 @@ class ShineReplace:
 
         for i in range(100):
             if i < len(self.info):
-                data += self.info[str(i)][0].to_bytes(1,"little", signed=True)
+                data += self.info[str(i)][0].to_bytes(1,"little", signed=False)
                 data += self.info[str(i)][1].to_bytes(1,"little", signed=False)
 
             else:
@@ -524,19 +597,31 @@ class DeathLinkPacket:
 #region Connection Packets
 
 class ConnectPacket:
-    SIZE : short = 4
+    CLIENT_NAME_SIZE : int = 32
     connection_type : ConnectionType
+    max_player_count : int = 8
+    client_name : str = ""
+    SIZE : short = 4 + 2 + CLIENT_NAME_SIZE
 
-    def __init__(self, packet_bytes : bytearray = None , connection_type : ConnectionType = ConnectionType.Connect):
+
+    def __init__(self, packet_bytes : bytearray = None , connection_type : ConnectionType = ConnectionType.Connect, max_players : int = 8, client_name = None):
         if packet_bytes:
             self.deserialize(packet_bytes)
         else:
             self.connection_type = connection_type
+            self.max_player_count = max_players
+            self.client_name = client_name
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
         value = self.connection_type.value
         data += value.to_bytes(4,"little")
+        data += self.max_player_count.to_bytes(2,"little")
+        data += self.client_name.encode("utf-8")
+
+        while len(data) < self.SIZE:
+            data += b"\x00"
+
         return data
 
     def deserialize(self, data : bytes | bytearray) -> None:
@@ -544,19 +629,71 @@ class ConnectPacket:
             data = bytearray(data)
 
         self.connection_type = ConnectionType(int.from_bytes(data[0:4],"little"))
+        self.max_player_count = int.from_bytes(data[4:6], "little")
+        self.client_name = data[6:].decode("utf-8")
 
 class DisconnectPacket:
     # Empty Packet just to signal disconnect
     SIZE : short = 0
 
+class ArchipelagoConnectPacket:
+    host_name: str
+    port: int
+    slot_name: str
+    password: str
+    FIELD_SIZE = 64
+    SIZE: short = 64 * 3 + 2
+
+    def __init__(self, packet_bytes : bytearray = None):
+        if packet_bytes:
+            self.deserialize(packet_bytes)
+
+    def serialize(self) -> bytearray:
+        pass
+        # data : bytearray = bytearray()
+
+    def deserialize(self, data: bytes | bytearray) -> None:
+        if data is bytes:
+            data = bytearray(data)
+
+        offset = 0
+        self.host_name = data[offset:offset + self.FIELD_SIZE].decode(encoding="utf-8")
+        count = 0
+        for char in self.host_name:
+            count += 1 if char != '\0' else 0
+        self.host_name = self.host_name[0:count]
+        offset += self.FIELD_SIZE
+        self.port = int.from_bytes(data[offset:offset + 2], byteorder="little", signed=False)
+        offset += 2
+        self.slot_name = data[offset:offset + self.FIELD_SIZE].decode(encoding="utf-8")
+        count = 0
+        for char in self.slot_name:
+            count += 1 if char != '\0' else 0
+        self.slot_name = self.slot_name[0:count]
+        offset += self.FIELD_SIZE
+        self.password = data[offset:offset + self.FIELD_SIZE].decode(encoding="utf-8")
+        count = 0
+        for char in self.password:
+            count += 1 if char != '\0' else 0
+        self.password = self.password[0:count]
+        offset += self.FIELD_SIZE
+
+
+
 class InitPacket:
-    max_players : ushort = ushort(4)
-    SIZE : short = 2
+    max_players : int = 4
+    server_version : str = "Archipelago"
+    SERVER_VERSION_SIZE = 32
+    SIZE : int = 2 + SERVER_VERSION_SIZE
 
     def serialize(self) -> bytearray:
         data : bytearray = bytearray()
-        as_integer : int = self.max_players.value
-        data += as_integer.to_bytes(2, "little")
+        data += self.max_players.to_bytes(2, "little")
+        data += self.server_version.encode("utf-8", "ignore")
+
+        while len(data) < self.SIZE:
+            data += b'\x00'
+
         if len(data) != self.SIZE:
             raise f"InitPacket failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
@@ -565,7 +702,7 @@ class InitPacket:
     def deserialize(self, data : bytes | bytearray) -> None:
         if data is bytes:
             data = bytearray(data)
-        self.max_players = ushort(int.from_bytes(data[0:self.SIZE], "little"))
+        self.max_players = int.from_bytes(data[0:self.SIZE], "little")
 
 #endregion
 
@@ -574,7 +711,7 @@ class PacketHeader:
     guid : bytearray
     packet_type : PacketType
     packet_size : short
-    SIZE : short = 16 + 4
+    SIZE : short = 16 + 2 + 2
 
     def __init__(self, header_bytes : bytearray = None, guid : bytearray = None,  packet_type : PacketType = PacketType.Init):
         if header_bytes:
@@ -590,9 +727,9 @@ class PacketHeader:
         while len(data) < self.GUID_SIZE:
             data += b"\x00"
         int_value: int = self.packet_type.value
-        data += int_value.to_bytes(2, "little")
+        data += int_value.to_bytes(2, "little", signed=True)
         int_value2 : int = self.packet_size
-        data += int_value2.to_bytes(2, "little")
+        data += int_value2.to_bytes(2, "little", signed=True)
         if len(data) != self.SIZE:
             raise f"PacketHeader failed to serialize. bytearray is incorrect size {self.SIZE}."
         return data
@@ -603,9 +740,16 @@ class PacketHeader:
         offset = 0
         self.guid = data[offset:self.GUID_SIZE]
         offset += self.GUID_SIZE
-        self.packet_type = PacketType(int.from_bytes(data[offset:offset + 2], "little"))
+        packet_type = int.from_bytes(data[offset:offset + 2], "little")
+
         offset += 2
         self.packet_size = short(int.from_bytes(data[offset:offset + 2], "little"))
+
+        if packet_type <= PacketType.ArchipelagoConnect.value:
+            self.packet_type = PacketType(packet_type)
+        else:
+            self.packet_type = PacketType(0)
+
 
 class Packet:
     header : PacketHeader
@@ -628,15 +772,16 @@ class Packet:
                     self.packet = SlotDataPacket(cascade=packet_data[0], sand=packet_data[1], wooded=packet_data[2],
                         lake=packet_data[3], lost =packet_data[4], metro=packet_data[5], seaside=packet_data[6],
                         snow=packet_data[7], luncheon=packet_data[8], ruined=packet_data[9], bowser=packet_data[10],
-                        dark=packet_data[11], darker=packet_data[12], regionals=packet_data[13], captures=packet_data[14])
+                        dark=packet_data[11], darker=packet_data[12], goal=packet_data[13], regionals=packet_data[14], captures=packet_data[15],
+                                                 entrance_randomization=packet_data[16])
                 case PacketType.ArchipelagoChat:
-                    self.packet = ChatMessagePacket(messages=packet_data[0])
+                    self.packet = ChatMessagePacket(guid=packet_data[0], message_type=packet_data[1], message=packet_data[2])
                 case PacketType.Check:
-                    self.packet = CheckPacket(location_id=packet_data[0], item_type=packet_data[1], index=packet_data[2], obj_id=packet_data[3], stage=packet_data[4], amount=packet_data[5])
+                    self.packet = CheckPacket(location_id=packet_data[0], item_type=packet_data[1], index=packet_data[2], obj_id=packet_data[3], stage=packet_data[4], amount=packet_data[5], sender_name=packet_data[6])
                 case PacketType.DeathLink:
                     self.packet = DeathLinkPacket()
-                case PacketType.ShineChecks:
-                    self.packet = ShineChecksPacket(checks=packet_data[0])
+                case PacketType.SentChecks:
+                    self.packet = SentChecksPacket(check_type=packet_data[0], checks=packet_data[1])
                 case PacketType.ApInfo:
                     self.packet = ApInfoPacket(info_type=packet_data[0], index1=packet_data[1], index2=packet_data[2], index3=packet_data[3], info=packet_data[4])
                 case PacketType.ShopReplace:
@@ -662,12 +807,15 @@ class Packet:
             case PacketType.Check:
                 self.packet = CheckPacket(packet_bytes=data)
             case PacketType.ArchipelagoChat:
-                self.packet = ChatMessagePacket()
+                self.packet = ChatMessagePacket(packet_bytes=data)
             case PacketType.SlotData:
                 self.packet = SlotDataPacket(packet_bytes=data)
             case PacketType.DeathLink:
                 self.packet = DeathLinkPacket()
-            case PacketType.ShineChecks:
-                self.packet = ShineChecksPacket(packet_bytes=data)
+            case PacketType.SentChecks:
+                self.packet = SentChecksPacket(packet_bytes=data)
             case PacketType.ChangeStage:
                 self.packet = ChangeStagePacket(packet_bytes=data)
+            case PacketType.ArchipelagoConnect:
+                self.packet = ArchipelagoConnectPacket(packet_bytes=data)
+

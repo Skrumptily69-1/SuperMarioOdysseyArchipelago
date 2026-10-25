@@ -86,7 +86,28 @@ class GameDataFile
         };
 
         static_assert(sizeof(HintInfo) == 0x238, "size of HintInfo");
+
+        struct CoinCollectInfo {
+            void clear();
+
+            s32 worldId;
+            sead::FixedSafeString<128> stageName;
+            sead::FixedSafeString<128> objId;
+            s32 uniqueId;
+            bool isGet;
+        };
+
+        static_assert(sizeof(CoinCollectInfo) == 0x140);
+
+        struct CheckpointInfo {
+            UniqObjInfo objInfo = {};
+            sead::BitFlag32 scenarios = 0;
+            sead::Vector3f trans = sead::Vector3f::zero;
+            bool isGet = false;
+        };
         
+        static_assert(sizeof(CheckpointInfo) == 0x148);
+
         void initializeData(void);
         void tryReadByamlData(uchar const*);
         void tryFindCoinCollectInfo(char const*,char const*);
@@ -385,22 +406,42 @@ class GameDataFile
             return nullptr;
         }
 
+        // Credit: an_egg_guy
+        void customAddCoinCollect(const al::PlacementId* placeID, int worldID, const char* stage) {
+            if (customIsGotCoinCollect(placeID, stage))
+                return;
+            sead::FixedSafeString<128> objID;
+            placeID->makeString(&objID);
+            if (GameDataFile::CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr())) {
+                //info->isGet = true;
+                mCoinCollectGotNum[worldID]++;
+            }
+        }
+
+        // Credit: an_egg_guy
+        // custom impl of isGotCoinCollect that uses a provided stage instead of your current one
+        bool customIsGotCoinCollect(const al::PlacementId* placeID, const char* stage) const {
+            sead::FixedSafeString<128> objID;
+            placeID->makeString(&objID);
+            const CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr());
+            return info && info->isGet;
+        }
         // end custom methods
         
         ShineInfo **mShineInfoArray;
         ShineInfo **mShineInfoArray2;
         ShineInfo *mShineInfo;
-        void *qword18;
-        void *qword20;
-        int dword28;
-        int dword2C;
-        sead::FixedSafeString<0x80> char30;
-        sead::FixedSafeString<0x80> charC8;
-        sead::FixedSafeString<0x80> char160;
-        sead::FixedSafeString<0x80> char1F8;
-        sead::FixedSafeString<0x80> char290;
-        sead::FixedSafeString<0x80> char328;
-        sead::FixedSafeString<0x80> char3C0;
+        int **mShopShineNum; // 0x18
+        int **mMainScenarioNo; // 0x20
+        int mStartShineIndex; // 0x28
+        int dword2C; // 0x2C
+        sead::FixedSafeString<0x80> mPlayerStartId;  // 0x30
+        sead::FixedSafeString<0x80> mPlayerStartIdForSave;  // 0xC8
+        sead::FixedSafeString<0x80> char160;  // 0x160
+        sead::FixedSafeString<0x80> mCheckpointName;        // 0x1F8
+        sead::FixedSafeString<0x80> char290;  // 0x290
+        sead::FixedSafeString<0x80> mCurrentStageName;      // 0x328
+        sead::FixedSafeString<0x80> mPrevStageName;     // 0x3C0
         u16 word458;
         char gap45A[6];
         void *qword460;
@@ -416,15 +457,18 @@ class GameDataFile
         sead::FixedSafeString<0x80> *qword5C0;
         UniqObjInfo** mUniqueObjInfoArr;
         void *qword5D0;
-        void *qword5D8;
-        void *qword5E0;
-        void *qword5E8;
-        void *qword5F0;
-        u16 word5F8;
+        int mCoinNum;               // 0x5D8 
+        int mTotalCoinNum           // 0x5DC
+        int mPlayerJumpCount;       // 0x5E0
+        int mPlayerThrowCapCount;   // 0x5E4
+        int **mUseCoinCollectNum;   // 0x5E8
+        int **mUnlockedWorldId;     // 0x5F0
+        bool mIsPlayDemoOpening; // 0x5F8
+        bool mIsMeetCap; // 0x5FC
         bool mIsEnableCap;
         void *qword600;
         int dword608;
-        bool byte60C;
+        bool mIsPayCoinToSphinx;  // 0x60C
         SphinxQuizData *mSphinxQuizData;
         void *qword618;
         void *qword620;
@@ -470,31 +514,38 @@ class GameDataFile
         GameDataHolder *mGameDataHolder;
         void *qword858;
         PlayerHitPointData *mPlayerHintPointData;
-        sead::FixedSafeString<0x80> char868;
+        sead::FixedSafeString<0x80> mNextStageName;  // 0x868
         bool byte900;
         bool byte901;
-        int dword904;
+        int mGotCheckpointNum; // 0x904
         sead::FixedSafeString<0x80> char908;
         HintInfo *mShineHintList; // 0x9A0
-        sead::PtrArrayImpl sead__ptrarrayimpl9A8;
-        sead::PtrArrayImpl sead__ptrarrayimpl9B8;
-        sead::PtrArrayImpl sead__ptrarrayimpl9C8;
-        sead::PtrArrayImpl sead__ptrarrayimpl9D8;
-        void *qword9E8;
+        sead::PtrArrayImpl mHintTable;             // 0x9A8
+        sead::PtrArrayImpl mHintTableByIdx;        // 0x9B8
+        sead::PtrArrayImpl mCoinCollectTable;      // 0x9C8
+        sead::PtrArray<CoinCollectInfo> mCoinCollectList;       // 0x9D8
+        CheckpointInfo *mCheckpointTable;          // 0x9E8
         int mCurWorldID; // 0x9F0
-        void *qword9F8;
-        void *qwordA00;
-        u16 wordA08;
-        bool byteA0A;
-        void *qwordA10;
-        void *qwordA18;
-        int dwordA20;
-        int dwordA24;
-        int dwordA28;
+        int mCurWorldIDForWrite; // 0x9F4
+        int qword9F8;
+        bool mIsPlayDemoReturnToHome; // 0x9FC 
+        bool mIsPlayDemoAwardSpecial;  // 0x9FD 
+        bool mIsPlayDemoWorldWarpHole;  // 0x9FE 
+        bool unkBool; // 0x9FF
+        int **mCoinCollectGotNum;       // 0xA00
+        bool mIsEnterStageFirst;   // 0xA08
+        bool A09;
+        bool mIsWarpCheckpoint;       // 0xA0A
+        int **mTotalShineNum;          // 0xA10
+        int **mTotalMoonRockShineNum; // 0xA18
+        int mTotalAchievementNum; // 0xA20
+        int mScenarioNoPlacement; // 0xA24
+        int mScenarioNoOverride ; // 0xA28
         bool byteA2C;
         ChangeStageInfo *mChangeStageInfo; // 0xA2D
-        ChangeStageInfo *mChangeStageInfo2; // 0xA30
-        void *qwordA40;
+        ChangeStageInfo* mMissRestartInfo;  // 0xA30
+        int *qwordA40;
+        int raceType; // 0xA44
         void *qwordA48;
         void *qwordA50;
         void *qwordA58;
