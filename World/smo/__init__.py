@@ -7,11 +7,11 @@ from .Items import item_table, SMOItem, filler_item_table, outfits, shop_items, 
     location_hint_list
 from .Locations import locations_table, SMOLocation, locations_list, post_game_locations_list, \
     special_locations_table, full_moon_locations_list, goals_table
-from .Options import SMOOptions
+from .Options import SMOOptions, option_groups
 from .Rules import set_rules
 from .Regions import create_regions
-from BaseClasses import Item, ItemClassification
-from worlds.AutoWorld import World
+from BaseClasses import Item, ItemClassification, Tutorial
+from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import (Component, components, Type as component_type, SuffixIdentifier, launch as launch_component)
 from settings import Group, UserFolderPath
 from Utils import output_path
@@ -26,6 +26,23 @@ component = Component("Super Mario Odyssey Client", component_type=component_typ
                       game_name="Super Mario Odyssey", func=launch_client)
 components.append(component)
 
+class SMOWebWorld(WebWorld):
+    game = "Super Mario Odyssey"
+
+    theme = "grass"
+
+    setup_en = Tutorial(
+        "Multiworld Setup Guide",
+        "A guide to setting up SMO for MultiWorld.",
+        "English",
+        "setup_en.md",
+        "setup/en",
+        ["Kgamer77"],
+    )
+
+    tutorials = [setup_en]
+
+    option_groups = option_groups
 
 class SMOWorld(World):
     """Super Mario Odyssey is a 3-D Platformer where Mario sets off across the world with his companion Cappy to save Princess Peach and Cappy's sister Tiara from Bowser's wedding plans."""
@@ -33,6 +50,8 @@ class SMOWorld(World):
 
     #settings_key = "smo_settings"
     #settings : SMOSettings
+
+    web = SMOWebWorld()
 
     options_dataclass = SMOOptions
     options: SMOOptions

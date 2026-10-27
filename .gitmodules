@@ -1,0 +1,13 @@
+
+[submodule "Mod/lib/OdysseyHeaders"]
+	path = Mod/lib/OdysseyHeaders
+	url = https://github.com/MonsterDruide1/OdysseyHeaders
+[submodule "Mod/lib/imgui"]
+	path = Mod/lib/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "Mod/sys"]
+	path = Mod/sys
+	url = https://github.com/fruityloops1/LibHakkun
+[submodule "Mod/lib/APCppNX"]
+	path = Mod/lib/APCppNX
+	url = https://github.com/Kgamer77/APCppNX
